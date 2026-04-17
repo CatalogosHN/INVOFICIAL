@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Panel Inventario</title>
+    <title>Dashboard - WebOwnerAdmin</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -238,6 +238,39 @@
             color: var(--text-muted);
             font-size: 0.92rem;
         }
+
+
+        .btn-primary-soft,
+        .btn-danger-soft,
+        .btn-success-soft,
+        .btn-info-soft {
+            border: 0;
+            border-radius: .85rem;
+            padding: .72rem 1rem;
+            font-weight: 700;
+            box-shadow: 0 8px 18px rgba(34, 41, 47, 0.08);
+        }
+
+        .btn-primary-soft {
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.8));
+            color: #fff;
+        }
+
+        .btn-danger-soft {
+            background: rgba(234,84,85,0.12);
+            color: var(--danger);
+        }
+
+        .btn-success-soft {
+            background: rgba(40,199,111,0.12);
+            color: var(--success);
+        }
+
+        .btn-info-soft {
+            background: rgba(0,207,232,0.12);
+            color: var(--info);
+        }
+
 
         .hero-card,
         .card-soft {
@@ -558,10 +591,153 @@
             }
         }
 
+    
+        .sync-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.1rem 1.15rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .sync-card-header {
+            display: flex;
+            justify-content: space-between;
+            gap: .85rem;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .sync-card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2f3349;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .sync-card-subtitle {
+            color: var(--muted, var(--text-muted));
+            font-size: .84rem;
+            margin-top: .3rem;
+            line-height: 1.55;
+        }
+
+        .sync-status-chip {
+            border-radius: 999px;
+            padding: .45rem .85rem;
+            font-size: .76rem;
+            font-weight: 700;
+            white-space: nowrap;
+            background: rgba(115,103,240,0.12);
+            color: var(--primary);
+        }
+
+        .sync-status-chip.success { background: rgba(40,199,111,0.12); color: var(--success); }
+        .sync-status-chip.error { background: rgba(234,84,85,0.12); color: var(--danger); }
+        .sync-status-chip.loading { background: rgba(0,207,232,0.12); color: var(--info); }
+        .sync-status-chip.idle { background: rgba(115,103,240,0.12); color: var(--primary); }
+
+        .sync-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .sync-field label {
+            font-weight: 700;
+            color: #2f3349;
+            margin-bottom: .5rem;
+            display: block;
+        }
+
+        .sync-input-row {
+            display: flex;
+            gap: .6rem;
+            align-items: stretch;
+        }
+
+        .sync-input-row .form-control {
+            min-height: 48px;
+            border-radius: .85rem;
+        }
+
+        .sync-eye-btn {
+            min-width: 48px;
+            border-radius: .85rem;
+            border: 1px solid var(--border-soft);
+            background: #fff;
+            color: var(--primary);
+            box-shadow: none;
+        }
+
+        .sync-help {
+            display: block;
+            color: var(--muted, var(--text-muted));
+            font-size: .78rem;
+            margin-top: .45rem;
+            line-height: 1.5;
+        }
+
+        .sync-meta-card {
+            background: rgba(115,103,240,0.06);
+            border: 1px solid rgba(115,103,240,0.1);
+            border-radius: 1rem;
+            padding: .95rem 1rem;
+        }
+
+        .sync-meta-line {
+            display: flex;
+            flex-direction: column;
+            gap: .22rem;
+            margin-bottom: .8rem;
+        }
+
+        .sync-meta-line:last-child { margin-bottom: 0; }
+        .sync-meta-line span {
+            color: var(--muted, var(--text-muted));
+            font-size: .73rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .sync-meta-line strong {
+            color: #2f3349;
+            font-size: .83rem;
+            word-break: break-word;
+        }
+
+        .sync-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .7rem;
+            margin-top: 1rem;
+        }
+
+        .sync-note {
+            margin-top: .9rem;
+            font-size: .82rem;
+            color: var(--muted, var(--text-muted));
+            line-height: 1.55;
+        }
+
+        @media (max-width: 991px) {
+            .sync-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 575px) {
+            .sync-card-header { flex-direction: column; }
+            .sync-input-row { flex-direction: column; }
+            .sync-actions .btn { width: 100%; }
+        }
+
     </style>
 
     <script src="keyauth-config.js"></script>
     <script src="auth.js"></script>
+    <script src="sync.js"></script>
 </head>
 <body class="auth-checking">
 
@@ -656,7 +832,50 @@
             </div>
         </div>
 
-        <div class="stats-grid">
+
+        <section id="github-sync" class="sync-card github-sync-panel">
+            <div class="sync-card-header">
+                <div>
+                    <div class="sync-card-title"><i class="fas fa-cloud"></i> Sincronización GitHub</div>
+                    <div class="sync-card-subtitle">Aquí dejas listo el token para que este dispositivo lea y guarde el mismo respaldo del inventario, clientes, ventas y fotos.</div>
+                </div>
+                <span class="sync-status-chip idle" data-sync-output="chip">Token pendiente</span>
+            </div>
+            <div class="sync-grid">
+                <div class="sync-field">
+                    <label>Token de GitHub</label>
+                    <div class="sync-input-row">
+                        <input type="password" class="form-control" data-sync-field="token" placeholder="Pega aquí tu token del repo">
+                        <button type="button" class="sync-eye-btn" data-sync-action="toggle-token"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <small class="sync-help">No se publica en tu página. Solo queda guardado en este navegador si marcas la casilla.</small>
+                </div>
+                <div class="sync-meta-card">
+                    <div class="sync-meta-line">
+                        <span>Destino configurado</span>
+                        <strong data-sync-output="repo">CatalogosHN/INVOFICIAL · data/webowneradmin-store.json</strong>
+                    </div>
+                    <div class="sync-meta-line">
+                        <span>Última sincronización</span>
+                        <strong data-sync-output="last-sync">Sin sincronizar todavía</strong>
+                    </div>
+                    <div class="custom-control custom-checkbox mt-2">
+                        <input type="checkbox" class="custom-control-input" id="syncRememberTokenDashboard" data-sync-field="remember">
+                        <label class="custom-control-label" for="syncRememberTokenDashboard">Guardar token en este dispositivo</label>
+                    </div>
+                </div>
+            </div>
+            <div class="sync-actions">
+                <button type="button" class="btn btn-primary-soft" data-sync-action="save-config"><i class="fas fa-key mr-2"></i>Guardar token</button>
+                <button type="button" class="btn btn-info-soft" data-sync-action="load-remote"><i class="fas fa-cloud-download-alt mr-2"></i>Cargar nube</button>
+                <button type="button" class="btn btn-success-soft" data-sync-action="push-remote"><i class="fas fa-cloud-upload-alt mr-2"></i>Guardar todo en nube</button>
+                <button type="button" class="btn btn-danger-soft" data-sync-action="clear-token"><i class="fas fa-eraser mr-2"></i>Quitar token</button>
+            </div>
+            <div class="sync-note" data-sync-output="status">Token pendiente. Tus datos siguen funcionando en este dispositivo.</div>
+        </section>
+
+
+                <div class="stats-grid">
             <div class="stat-card stat-primary">
                 <div class="stat-icon"><i class="fas fa-box-open"></i></div>
                 <div>
@@ -802,9 +1021,19 @@
             syncMenuUi();
         }
 
+        function sortRecordsByDate(list) {
+            if (!Array.isArray(list)) return [];
+            return [...list].sort((a, b) => {
+                const aDate = new Date((a && (a.createdAtISO || a.updatedAtISO || a.createdAt || a.updatedAt)) || 0).getTime();
+                const bDate = new Date((b && (b.createdAtISO || b.updatedAtISO || b.createdAt || b.updatedAt)) || 0).getTime();
+                return bDate - aDate;
+            });
+        }
+
         function readStore(key) {
             try {
-                return JSON.parse(localStorage.getItem(key)) || [];
+                const value = JSON.parse(localStorage.getItem(key)) || [];
+                return Array.isArray(value) ? sortRecordsByDate(value) : [];
             } catch (error) {
                 return [];
             }
@@ -893,6 +1122,14 @@
         });
         syncMenuUi();
         renderDashboard();
+
+        window.addEventListener('webowner-sync-data-applied', () => {
+            renderDashboard();
+        });
+
+        if (window.WebOwnerSync) {
+            window.WebOwnerSync.init({ onDataApplied: renderDashboard });
+        }
     </script>
 </body>
 </html>

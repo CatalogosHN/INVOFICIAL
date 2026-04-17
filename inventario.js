@@ -14,9 +14,19 @@
             document.getElementById('sidebar').classList.toggle('active');
         }
 
+        function sortRecordsByDate(list) {
+            if (!Array.isArray(list)) return [];
+            return [...list].sort((a, b) => {
+                const aDate = new Date((a && (a.createdAtISO || a.updatedAtISO || a.createdAt || a.updatedAt)) || 0).getTime();
+                const bDate = new Date((b && (b.createdAtISO || b.updatedAtISO || b.createdAt || b.updatedAt)) || 0).getTime();
+                return bDate - aDate;
+            });
+        }
+
         function readStore(key) {
             try {
-                return JSON.parse(localStorage.getItem(key)) || [];
+                const value = JSON.parse(localStorage.getItem(key)) || [];
+                return Array.isArray(value) ? sortRecordsByDate(value) : [];
             } catch (error) {
                 return [];
             }
@@ -24,6 +34,7 @@
 
         function saveStore(key, value) {
             localStorage.setItem(key, JSON.stringify(value));
+            if (window.WebOwnerSync) window.WebOwnerSync.queueAutoSync();
         }
 
         function generateId(prefix = 'id') {
@@ -1094,4 +1105,12 @@
         updateCaexMode();
         updatePaymentMode();
         refreshEverything();
+
+        window.addEventListener('webowner-sync-data-applied', () => {
+            refreshEverything();
+        });
+
+        if (window.WebOwnerSync) {
+            window.WebOwnerSync.init({ onDataApplied: refreshEverything, onToast: showToast });
+        }
     

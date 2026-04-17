@@ -48,9 +48,19 @@
             setMenuState(!sidebar.classList.contains('active'));
         }
 
+        function sortRecordsByDate(list) {
+            if (!Array.isArray(list)) return [];
+            return [...list].sort((a, b) => {
+                const aDate = new Date((a && (a.createdAtISO || a.updatedAtISO || a.createdAt || a.updatedAt)) || 0).getTime();
+                const bDate = new Date((b && (b.createdAtISO || b.updatedAtISO || b.createdAt || b.updatedAt)) || 0).getTime();
+                return bDate - aDate;
+            });
+        }
+
         function readStore(key) {
             try {
-                return JSON.parse(localStorage.getItem(key)) || [];
+                const value = JSON.parse(localStorage.getItem(key)) || [];
+                return Array.isArray(value) ? sortRecordsByDate(value) : [];
             } catch (error) {
                 return [];
             }

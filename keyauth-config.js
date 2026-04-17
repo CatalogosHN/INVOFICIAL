@@ -1,9 +1,9 @@
 window.KEYAUTH_CONFIG = {
     appName: "WebOwnerAdmin",
-    ownerid: "RZsbvRZczd",
+    ownerid: "PON_TU_OWNERID_AQUI",
     version: "1.0",
     apiUrl: "https://keyauth.win/api/1.3/",
     redirectAfterLogin: "index.html",
-    appDisplayName: "Panel Inventario",
-    fingerprintSalt: "PanelInventario-v1"
+    appDisplayName: "WebOwnerAdmin",
+    fingerprintSalt: "webowneradmin-v1"
 };

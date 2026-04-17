@@ -2,12 +2,12 @@
     const AUTH_STORAGE_KEY = 'webowneradmin_auth_session';
     const CONFIG = Object.assign({
         appName: 'WebOwnerAdmin',
-        ownerid: 'RZsbvRZczd',
+        ownerid: '',
         version: '1.0',
         apiUrl: 'https://keyauth.win/api/1.3/',
         redirectAfterLogin: 'index.html',
-        appDisplayName: 'Panel Inventario',
-        fingerprintSalt: 'PanelInventario'
+        appDisplayName: 'WebOwnerAdmin',
+        fingerprintSalt: 'webowneradmin'
     }, window.KEYAUTH_CONFIG || {});
 
     const currentPage = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
