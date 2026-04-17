@@ -17,7 +17,7 @@
         owner: 'CatalogosHN',
         repo: 'INVOFICIAL',
         branch: 'main',
-        path: 'data/webowneradmin-store.json',
+        path: 'data/adm-store.json',
         rememberToken: false
     };
 

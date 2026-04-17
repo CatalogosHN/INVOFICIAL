@@ -2,7 +2,7 @@
     const AUTH_STORAGE_KEY = 'webowneradmin_auth_session';
     const CONFIG = Object.assign({
         appName: 'WebOwnerAdmin',
-        ownerid: '',
+        ownerid: 'RZsbvRZczd',
         version: '1.0',
         apiUrl: 'https://keyauth.win/api/1.3/',
         redirectAfterLogin: 'index.html',
