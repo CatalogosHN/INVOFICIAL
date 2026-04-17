@@ -4,6 +4,6 @@ window.KEYAUTH_CONFIG = {
     version: "1.0",
     apiUrl: "https://keyauth.win/api/1.3/",
     redirectAfterLogin: "index.html",
-    appDisplayName: "Panel Inventario",
+    appDisplayName: "PanelInventario",
     fingerprintSalt: "PanelInventario-v1"
 };
