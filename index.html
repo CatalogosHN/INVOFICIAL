@@ -1,0 +1,707 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mi Sistema</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #7367f0;
+            --primary-soft: rgba(115,103,240,0.12);
+            --dark-blue: #10163A;
+            --success: #28c76f;
+            --warning: #ff9f43;
+            --info: #00cfe8;
+            --danger: #ea5455;
+            --text-muted: #6e6b7b;
+            --border-soft: rgba(34, 41, 47, 0.08);
+            --card-shadow: 0 8px 24px rgba(34, 41, 47, 0.08);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #f8f8f8;
+            margin: 0;
+            color: #3b4253;
+        }
+
+        .main-menu {
+            width: var(--sidebar-width);
+            background: var(--dark-blue);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1050;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,.5);
+            overflow-y: auto;
+        }
+
+        .main-menu::-webkit-scrollbar { width: 6px; }
+        .main-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 50px; }
+
+        .navbar-header {
+            padding: 1.5rem;
+            color: #fff;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .brand-title {
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        .brand-subtitle {
+            margin-top: .35rem;
+            color: rgba(255,255,255,0.65);
+            font-size: .78rem;
+        }
+
+        .navigation {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 1.5rem;
+        }
+
+        .navigation li { margin-bottom: 4px; }
+        .navigation li a,
+        .submenu a,
+        .submenu button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 22px;
+            color: #b4b7bd;
+            text-decoration: none;
+            background: transparent;
+            border: 0;
+            text-align: left;
+            font-size: 0.95rem;
+            transition: 0.25s ease;
+            cursor: pointer;
+        }
+
+        .navigation li > a:hover,
+        .submenu a:hover,
+        .submenu button:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .navigation li.active > a,
+        .navigation li.active > button {
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.72));
+            color: #fff;
+            border-radius: 0 25px 25px 0;
+            margin-right: 15px;
+            box-shadow: 0 0 12px rgba(115,103,240,0.35);
+        }
+
+        .nav-link-label {
+            flex: 1;
+        }
+
+        .submenu {
+            list-style: none;
+            padding: 4px 0 8px;
+            margin: 0;
+            display: none;
+        }
+
+        .nav-item.open .submenu { display: block; }
+
+        .submenu a {
+            padding: 10px 22px 10px 56px;
+            font-size: 0.88rem;
+            position: relative;
+        }
+
+        .submenu a::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.35);
+            position: absolute;
+            left: 34px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .submenu a.active-sub {
+            color: #fff;
+            background: rgba(115,103,240,0.18);
+        }
+
+        .submenu a.active-sub::before { background: var(--primary); }
+
+        .nav-chevron {
+            transition: transform .25s ease;
+            font-size: 0.8rem;
+        }
+
+        .nav-item.open > a .nav-chevron,
+        .nav-item.open > button .nav-chevron {
+            transform: rotate(180deg);
+        }
+
+        .app-content {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+            transition: 0.3s;
+        }
+
+        .header-navbar {
+            background: #fff;
+            padding: 1rem 1.25rem;
+            border-radius: 0.85rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .toggle-btn {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-right: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .header-right {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+
+        .hero-card,
+        .card-soft {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            background: #fff;
+        }
+
+        .hero-card {
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #7367f0 0%, #8f84ff 100%);
+            color: #fff;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-card .card-body {
+            padding: 1.75rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-card::after {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            right: -90px;
+            top: -90px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 50%;
+        }
+
+        .hero-card::before {
+            content: "";
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            right: 60px;
+            bottom: -80px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+
+        .hero-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin-bottom: .6rem;
+        }
+
+        .hero-text {
+            max-width: 780px;
+            color: rgba(255,255,255,0.88);
+            margin-bottom: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: .95rem;
+            min-height: 110px;
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .stat-primary .stat-icon { background: rgba(115,103,240,0.15); color: var(--primary); }
+        .stat-success .stat-icon { background: rgba(40,199,111,0.15); color: var(--success); }
+        .stat-info .stat-icon { background: rgba(0,207,232,0.15); color: var(--info); }
+        .stat-warning .stat-icon { background: rgba(255,159,67,0.18); color: var(--warning); }
+        .stat-danger .stat-icon { background: rgba(234,84,85,0.16); color: var(--danger); }
+
+        .stat-label {
+            font-size: .85rem;
+            color: var(--text-muted);
+            margin-bottom: .25rem;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: .2rem;
+        }
+
+        .stat-help {
+            color: var(--text-muted);
+            font-size: .75rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #2f3349;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .quick-card {
+            display: block;
+            text-decoration: none !important;
+            color: inherit;
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.15rem;
+            transition: transform .2s ease, box-shadow .2s ease;
+            border: 1px solid transparent;
+        }
+
+        .quick-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(34,41,47,.12);
+            border-color: rgba(115,103,240,0.16);
+        }
+
+        .quick-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: .9rem;
+            font-size: 1.1rem;
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        .quick-title {
+            font-weight: 700;
+            margin-bottom: .35rem;
+        }
+
+        .quick-desc {
+            color: var(--text-muted);
+            font-size: .84rem;
+            margin-bottom: 0;
+        }
+
+        .list-soft {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.2rem;
+            height: 100%;
+        }
+
+        .list-item-soft {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .85rem 0;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .list-item-soft:last-child { border-bottom: 0; padding-bottom: 0; }
+        .list-item-soft:first-child { padding-top: 0; }
+
+        .item-main strong {
+            display: block;
+            margin-bottom: .2rem;
+        }
+
+        .item-muted {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .42rem .78rem;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        .pill-danger {
+            color: var(--danger);
+            background: rgba(234,84,85,0.12);
+        }
+
+        .pill-success {
+            color: var(--success);
+            background: rgba(40,199,111,0.12);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2.2rem 1rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 1199px) {
+            .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 991px) {
+            .main-menu { transform: translateX(-100%); }
+            .main-menu.active { transform: translateX(0); }
+            .app-content { margin-left: 0 !important; }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 767px) {
+            .header-navbar { flex-direction: column; align-items: flex-start; gap: .75rem; }
+            .hero-title { font-size: 1.45rem; }
+            .stats-grid,
+            .quick-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-menu" id="sidebar">
+        <div class="navbar-header">
+            <h4 class="brand-title">MI SISTEMA</h4>
+            <div class="brand-subtitle">Dashboard principal</div>
+        </div>
+
+        <ul class="navigation">
+            <li class="active">
+                <a href="index.html">
+                    <i class="fas fa-home mr-3"></i>
+                    <span class="nav-link-label">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item has-sub" data-group="inventario">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-box-open mr-3"></i>
+                    <span class="nav-link-label">Inventario</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#inventario-items">Items</a></li>
+                    <li><a href="inventario.html#inventario-rauda">Rauda</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub" data-group="clientes">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-users mr-3"></i>
+                    <span class="nav-link-label">Clientes</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#clientes-crear">Crear Nuevo Cliente</a></li>
+                    <li><a href="inventario.html#clientes-mostrar">Mostrar Clientes</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub" data-group="caex">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-shipping-fast mr-3"></i>
+                    <span class="nav-link-label">CAEX Envíos</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#caex-crear">Nuevo Envío</a></li>
+                    <li><a href="inventario.html#caex-historial">Historial CAEX</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub" data-group="ventas">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-cash-register mr-3"></i>
+                    <span class="nav-link-label">Ventas</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#ventas-encuentro">Encuentro</a></li>
+                    <li><a href="inventario.html#ventas-moto">Envío Moto</a></li>
+                    <li><a href="inventario.html#ventas-caex">Envío CAEX</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="app-content">
+        <nav class="header-navbar">
+            <div class="header-left">
+                <div class="toggle-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+                <span>Panel general del sistema</span>
+            </div>
+            <div class="header-right">Vista rápida de inventario, clientes, envíos y ventas</div>
+        </nav>
+
+        <div class="hero-card">
+            <div class="card-body">
+                <div class="hero-title">Sistema reorganizado por secciones</div>
+                <p class="hero-text">
+                    Se dejó un menú desplegable para Inventario, Clientes, CAEX Envíos y Ventas, manteniendo el estilo elegante
+                    y usando la misma línea visual del panel original.
+                </p>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon"><i class="fas fa-box-open"></i></div>
+                <div>
+                    <div class="stat-label">Items</div>
+                    <div class="stat-value" id="countItems">0</div>
+                    <div class="stat-help">Productos del inventario principal</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-success">
+                <div class="stat-icon"><i class="fas fa-warehouse"></i></div>
+                <div>
+                    <div class="stat-label">Rauda</div>
+                    <div class="stat-value" id="countRauda">0</div>
+                    <div class="stat-help">Productos del segundo inventario</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-info">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div>
+                    <div class="stat-label">Clientes</div>
+                    <div class="stat-value" id="countClients">0</div>
+                    <div class="stat-help">Registros guardados</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-warning">
+                <div class="stat-icon"><i class="fas fa-truck-loading"></i></div>
+                <div>
+                    <div class="stat-label">CAEX Envíos</div>
+                    <div class="stat-value" id="countCaex">0</div>
+                    <div class="stat-help">Envíos registrados</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-danger">
+                <div class="stat-icon"><i class="fas fa-cash-register"></i></div>
+                <div>
+                    <div class="stat-label">Ventas</div>
+                    <div class="stat-value" id="countSales">0</div>
+                    <div class="stat-help">Encuentro, moto y CAEX</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <div class="section-title">Accesos rápidos</div>
+            <div class="quick-grid">
+                <a class="quick-card" href="inventario.html#inventario-items">
+                    <div class="quick-icon"><i class="fas fa-boxes"></i></div>
+                    <div class="quick-title">Inventario Items</div>
+                    <p class="quick-desc">Agregar productos, foto, stock, costo inversión y mínimo de alerta.</p>
+                </a>
+
+                <a class="quick-card" href="inventario.html#clientes-crear">
+                    <div class="quick-icon"><i class="fas fa-user-plus"></i></div>
+                    <div class="quick-title">Añadir cliente</div>
+                    <p class="quick-desc">Clientes con hasta 3 teléfonos, departamento y poblado.</p>
+                </a>
+
+                <a class="quick-card" href="inventario.html#caex-crear">
+                    <div class="quick-icon"><i class="fas fa-shipping-fast"></i></div>
+                    <div class="quick-title">Crear envío CAEX</div>
+                    <p class="quick-desc">Selecciona cliente existente o crea uno nuevo y guárdalo al instante.</p>
+                </a>
+
+                <a class="quick-card" href="inventario.html#ventas-caex">
+                    <div class="quick-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="quick-title">Venta CAEX</div>
+                    <p class="quick-desc">Agrega varios productos desde inventario y controla anticipos o pago total.</p>
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="list-soft">
+                    <div class="section-title">Stock bajo en Items</div>
+                    <div id="lowStockList"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="list-soft">
+                    <div class="section-title">Últimos clientes registrados</div>
+                    <div id="recentClientsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            items: 'mi_sistema_items_inventory',
+            rauda: 'mi_sistema_rauda_inventory',
+            clients: 'mi_sistema_clients',
+            caex: 'mi_sistema_caex_shipments',
+            salesEncuentro: 'mi_sistema_sales_encuentro',
+            salesMoto: 'mi_sistema_sales_moto',
+            salesCaex: 'mi_sistema_sales_caex'
+        };
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function readStore(key) {
+            try {
+                return JSON.parse(localStorage.getItem(key)) || [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function formatPhones(phones) {
+            return (phones || []).filter(Boolean).join(', ');
+        }
+
+        function renderEmptyState(containerId, message) {
+            document.getElementById(containerId).innerHTML = `<div class="empty-state">${message}</div>`;
+        }
+
+        function renderDashboard() {
+            const items = readStore(STORAGE_KEYS.items);
+            const rauda = readStore(STORAGE_KEYS.rauda);
+            const clients = readStore(STORAGE_KEYS.clients);
+            const caex = readStore(STORAGE_KEYS.caex);
+            const salesEncuentro = readStore(STORAGE_KEYS.salesEncuentro);
+            const salesMoto = readStore(STORAGE_KEYS.salesMoto);
+            const salesCaex = readStore(STORAGE_KEYS.salesCaex);
+
+            document.getElementById('countItems').textContent = items.length;
+            document.getElementById('countRauda').textContent = rauda.length;
+            document.getElementById('countClients').textContent = clients.length;
+            document.getElementById('countCaex').textContent = caex.length;
+            document.getElementById('countSales').textContent = salesEncuentro.length + salesMoto.length + salesCaex.length;
+
+            const lowStock = items.filter(item => Number(item.minStock || 0) > 0 && Number(item.stock || 0) <= Number(item.minStock || 0));
+            if (!lowStock.length) {
+                renderEmptyState('lowStockList', 'No hay productos con stock bajo por ahora.');
+            } else {
+                document.getElementById('lowStockList').innerHTML = lowStock.slice(0, 6).map(item => `
+                    <div class="list-item-soft">
+                        <div class="item-main">
+                            <strong>${escapeHtml(item.name)}</strong>
+                            <div class="item-muted">Stock actual: ${Number(item.stock || 0)} · Mínimo: ${Number(item.minStock || 0)}</div>
+                        </div>
+                        <span class="pill-badge pill-danger">Stock bajo</span>
+                    </div>
+                `).join('');
+            }
+
+            const recentClients = [...clients].sort((a, b) => new Date(b.createdAtISO || 0) - new Date(a.createdAtISO || 0)).slice(0, 6);
+            if (!recentClients.length) {
+                renderEmptyState('recentClientsList', 'Aún no hay clientes registrados.');
+            } else {
+                document.getElementById('recentClientsList').innerHTML = recentClients.map(client => `
+                    <div class="list-item-soft">
+                        <div class="item-main">
+                            <strong>${escapeHtml(client.name)}</strong>
+                            <div class="item-muted">${escapeHtml(formatPhones(client.phones)) || 'Sin teléfono'} · ${escapeHtml(client.department || '')}${client.town ? ' · ' + escapeHtml(client.town) : ''}</div>
+                        </div>
+                        <span class="pill-badge pill-success">Cliente</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        document.querySelectorAll('.menu-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const parent = toggle.closest('.nav-item');
+                parent.classList.toggle('open');
+            });
+        });
+
+        document.querySelectorAll('.nav-item.has-sub').forEach(item => item.classList.add('open'));
+        renderDashboard();
+    </script>
+</body>
+</html>

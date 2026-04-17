@@ -1,0 +1,2699 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario - Mi Sistema</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #7367f0;
+            --primary-soft: rgba(115,103,240,0.12);
+            --dark-blue: #10163A;
+            --success: #28c76f;
+            --warning: #ff9f43;
+            --info: #00cfe8;
+            --danger: #ea5455;
+            --muted: #6e6b7b;
+            --border-soft: rgba(34, 41, 47, 0.08);
+            --card-shadow: 0 8px 24px rgba(34, 41, 47, 0.08);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8F8F8;
+            margin: 0;
+            color: #3b4253;
+        }
+
+        .main-menu {
+            width: var(--sidebar-width);
+            background-color: var(--dark-blue);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1050;
+            transition: transform .3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,.5);
+            overflow-y: auto;
+        }
+
+        .main-menu::-webkit-scrollbar { width: 6px; }
+        .main-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+
+        .navbar-header {
+            padding: 1.5rem;
+            color: #fff;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-title {
+            font-weight: 700;
+            letter-spacing: .08em;
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        .brand-subtitle {
+            margin-top: .35rem;
+            color: rgba(255,255,255,.65);
+            font-size: .78rem;
+        }
+
+        .navigation {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 1.5rem;
+        }
+
+        .navigation li { margin-bottom: 4px; }
+
+        .navigation li > a,
+        .submenu a {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 22px;
+            color: #b4b7bd;
+            text-decoration: none;
+            transition: 0.25s ease;
+        }
+
+        .navigation li > a:hover,
+        .submenu a:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .navigation li.active > a,
+        .nav-item.open.active-parent > a {
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.7));
+            color: #fff;
+            border-radius: 0 25px 25px 0;
+            margin-right: 15px;
+            box-shadow: 0 0 12px rgba(115,103,240,0.35);
+        }
+
+        .submenu {
+            list-style: none;
+            margin: 0;
+            padding: 4px 0 8px;
+            display: none;
+        }
+
+        .nav-item.open .submenu { display: block; }
+
+        .submenu a {
+            padding: 10px 22px 10px 56px;
+            font-size: .88rem;
+            position: relative;
+        }
+
+        .submenu a::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.35);
+            position: absolute;
+            left: 34px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .submenu a.active-sub {
+            color: #fff;
+            background: rgba(115,103,240,0.18);
+        }
+
+        .submenu a.active-sub::before {
+            background: var(--primary);
+        }
+
+        .nav-link-label {
+            flex: 1;
+        }
+
+        .nav-chevron {
+            transition: transform .25s ease;
+            font-size: 0.8rem;
+        }
+
+        .nav-item.open > a .nav-chevron { transform: rotate(180deg); }
+
+        .app-content {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+            transition: .3s;
+        }
+
+        .header-navbar {
+            background: #fff;
+            padding: 1rem 1.25rem;
+            border-radius: 0.85rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.35rem;
+            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            color: #2f3349;
+        }
+
+        .toggle-btn {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-right: 1rem;
+        }
+
+        .header-chip {
+            background: rgba(115,103,240,0.12);
+            color: var(--primary);
+            border-radius: 999px;
+            padding: .45rem .9rem;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        .alert-soft {
+            display: none;
+            background: rgba(255,159,67,0.14);
+            color: #8a4d00;
+            border-radius: 1rem;
+            padding: 1rem 1.1rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.25rem;
+        }
+
+        .alert-soft.show { display: block; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1rem;
+            min-height: 108px;
+        }
+
+        .summary-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: .75rem;
+            font-size: 1.05rem;
+        }
+
+        .summary-primary .summary-icon { background: rgba(115,103,240,0.15); color: var(--primary); }
+        .summary-success .summary-icon { background: rgba(40,199,111,0.15); color: var(--success); }
+        .summary-info .summary-icon { background: rgba(0,207,232,0.15); color: var(--info); }
+        .summary-warning .summary-icon { background: rgba(255,159,67,0.18); color: var(--warning); }
+        .summary-danger .summary-icon { background: rgba(234,84,85,0.16); color: var(--danger); }
+
+        .summary-label {
+            font-size: .82rem;
+            color: var(--muted);
+            margin-bottom: .25rem;
+        }
+
+        .summary-value {
+            font-size: 1.55rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .section-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            border: 0;
+        }
+
+        .section-header {
+            padding: 1.15rem 1.25rem;
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2f3349;
+        }
+
+        .title-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: .84rem;
+            margin: .25rem 0 0;
+        }
+
+        .section-body {
+            padding: 1.25rem;
+        }
+
+        .form-control,
+        .custom-select {
+            border-radius: .75rem;
+            min-height: 46px;
+            border: 1px solid rgba(34, 41, 47, 0.12);
+            box-shadow: none !important;
+        }
+
+        textarea.form-control { min-height: 96px; }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: .88rem;
+            color: #444b5a;
+            margin-bottom: .45rem;
+        }
+
+        .btn-primary-soft,
+        .btn-outline-soft,
+        .btn-danger-soft,
+        .btn-success-soft,
+        .btn-info-soft {
+            border: 0;
+            border-radius: .85rem;
+            font-weight: 600;
+            padding: .72rem 1rem;
+            transition: .2s ease;
+        }
+
+        .btn-primary-soft {
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.85));
+            color: #fff;
+        }
+
+        .btn-primary-soft:hover { color: #fff; transform: translateY(-1px); }
+
+        .btn-outline-soft {
+            background: rgba(115,103,240,0.1);
+            color: var(--primary);
+        }
+
+        .btn-outline-soft:hover {
+            background: rgba(115,103,240,0.16);
+            color: var(--primary);
+        }
+
+        .btn-danger-soft {
+            background: rgba(234,84,85,0.12);
+            color: var(--danger);
+        }
+
+        .btn-success-soft {
+            background: rgba(40,199,111,0.12);
+            color: var(--success);
+        }
+
+        .btn-info-soft {
+            background: rgba(0,207,232,0.12);
+            color: var(--info);
+        }
+
+        .mini-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            border-radius: 999px;
+            padding: .42rem .8rem;
+            font-size: .78rem;
+            font-weight: 600;
+            background: rgba(115,103,240,0.1);
+            color: var(--primary);
+        }
+
+        .table-responsive {
+            border-radius: .95rem;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: #f7f7fb;
+            text-transform: uppercase;
+            font-size: .74rem;
+            letter-spacing: .04em;
+            border: 0;
+            padding: .95rem .85rem;
+            white-space: nowrap;
+            color: #6e6b7b;
+        }
+
+        .table td {
+            vertical-align: middle;
+            border-color: var(--border-soft);
+            padding: .95rem .85rem;
+            font-size: .9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2.25rem 1rem;
+            color: var(--muted);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .38rem .75rem;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        .pill-success { color: var(--success); background: rgba(40,199,111,0.14); }
+        .pill-warning { color: #8a4d00; background: rgba(255,159,67,0.16); }
+        .pill-info { color: var(--info); background: rgba(0,207,232,0.12); }
+        .pill-danger { color: var(--danger); background: rgba(234,84,85,0.12); }
+
+        .thumb-preview,
+        .thumb-mini {
+            object-fit: cover;
+            border-radius: .8rem;
+            background: #f3f3f8;
+            border: 1px solid rgba(34,41,47,0.08);
+        }
+
+        .thumb-preview {
+            width: 80px;
+            height: 80px;
+        }
+
+        .thumb-mini {
+            width: 48px;
+            height: 48px;
+        }
+
+        .actions-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+        }
+
+        .subgrid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.25rem;
+        }
+
+        .subpanel {
+            border: 1px solid var(--border-soft);
+            border-radius: 1rem;
+            padding: 1rem;
+            background: #fcfcfe;
+            height: 100%;
+        }
+
+        .subpanel-title {
+            font-size: .96rem;
+            font-weight: 700;
+            margin-bottom: .85rem;
+            color: #2f3349;
+        }
+
+        .radio-card-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-card {
+            flex: 1 1 220px;
+            position: relative;
+        }
+
+        .radio-card input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .radio-card label {
+            width: 100%;
+            margin: 0;
+            border: 1px solid rgba(34,41,47,0.1);
+            border-radius: 1rem;
+            background: #fff;
+            padding: .95rem 1rem;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .radio-card input:checked + label {
+            border-color: rgba(115,103,240,0.35);
+            box-shadow: 0 8px 24px rgba(115,103,240,0.12);
+            background: rgba(115,103,240,0.05);
+        }
+
+        .radio-title {
+            font-weight: 700;
+            margin-bottom: .25rem;
+        }
+
+        .radio-help {
+            font-size: .8rem;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .phone-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+        }
+
+        .phone-tag {
+            background: rgba(115,103,240,0.1);
+            color: var(--primary);
+            border-radius: 999px;
+            padding: .32rem .65rem;
+            font-size: .76rem;
+            font-weight: 600;
+        }
+
+        .line-items-box {
+            border: 1px dashed rgba(115,103,240,0.32);
+            background: rgba(115,103,240,0.04);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+
+        .line-item-row {
+            display: flex;
+            justify-content: space-between;
+            gap: .75rem;
+            align-items: center;
+            background: #fff;
+            border-radius: .9rem;
+            padding: .8rem .9rem;
+            border: 1px solid rgba(34,41,47,0.08);
+            margin-bottom: .65rem;
+        }
+
+        .line-item-row:last-child { margin-bottom: 0; }
+
+        .payment-box {
+            border: 1px solid var(--border-soft);
+            background: #fcfcfe;
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+
+        .payment-box-title {
+            font-weight: 700;
+            margin-bottom: .85rem;
+        }
+
+        .switch-box {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .8rem 1rem;
+            border-radius: .95rem;
+            background: rgba(40,199,111,0.08);
+            margin-bottom: 1rem;
+        }
+
+        .switch-box input {
+            width: 18px;
+            height: 18px;
+        }
+
+        .hidden-panel { display: none !important; }
+
+        .toast-soft {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: #10163A;
+            color: #fff;
+            padding: .9rem 1rem;
+            border-radius: .9rem;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+            z-index: 3000;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: .25s ease;
+            pointer-events: none;
+            max-width: 320px;
+        }
+
+        .toast-soft.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .modal-soft {
+            position: fixed;
+            inset: 0;
+            background: rgba(16,22,58,0.58);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4000;
+            padding: 1rem;
+        }
+
+        .modal-soft.show { display: flex; }
+
+        .modal-card {
+            width: min(640px, 100%);
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .modal-head,
+        .modal-body,
+        .modal-foot {
+            padding: 1rem 1.2rem;
+        }
+
+        .modal-head {
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .modal-close {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .modal-foot {
+            border-top: 1px solid var(--border-soft);
+            text-align: right;
+        }
+
+        .detail-list {
+            display: grid;
+            gap: .75rem;
+        }
+
+        .detail-row {
+            border: 1px solid var(--border-soft);
+            border-radius: .9rem;
+            padding: .8rem .9rem;
+            background: #fcfcfe;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: .76rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--muted);
+            margin-bottom: .2rem;
+            font-weight: 700;
+        }
+
+        .hero-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            align-items: center;
+        }
+
+        .anchor-offset { scroll-margin-top: 24px; }
+
+
+        .smart-upload {
+            border: 1px dashed rgba(115,103,240,0.28);
+            border-radius: 1rem;
+            padding: 1rem;
+            background: linear-gradient(180deg, rgba(115,103,240,0.04), rgba(0,0,0,0));
+        }
+
+        .smart-upload.is-focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(115,103,240,0.08);
+        }
+
+        .smart-upload-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: .8rem;
+            flex-wrap: wrap;
+            margin-bottom: .85rem;
+        }
+
+        .smart-upload-title {
+            font-weight: 700;
+            color: #2f3349;
+            margin-bottom: .2rem;
+        }
+
+        .smart-upload-hint {
+            color: var(--muted);
+            font-size: .8rem;
+            line-height: 1.45;
+        }
+
+        .smart-upload-actions {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
+
+        .smart-upload-zone {
+            border: 1px dashed rgba(115,103,240,0.22);
+            background: rgba(115,103,240,0.05);
+            border-radius: .9rem;
+            min-height: 138px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: .2s ease;
+            outline: none;
+        }
+
+        .smart-upload-zone:hover,
+        .smart-upload-zone:focus {
+            background: rgba(115,103,240,0.09);
+            border-color: rgba(115,103,240,0.38);
+        }
+
+        .smart-upload-zone.dragover {
+            background: rgba(115,103,240,0.12);
+            border-color: var(--primary);
+        }
+
+        .smart-upload-zone i {
+            font-size: 1.55rem;
+            color: var(--primary);
+            margin-bottom: .6rem;
+            display: block;
+        }
+
+        .smart-upload-zone strong {
+            display: block;
+            font-size: .95rem;
+            color: #2f3349;
+            margin-bottom: .2rem;
+        }
+
+        .smart-upload-zone span {
+            display: block;
+            color: var(--muted);
+            font-size: .82rem;
+        }
+
+        .smart-upload-preview {
+            margin-top: .9rem;
+            display: none;
+            border: 1px solid rgba(34,41,47,0.08);
+            border-radius: 1rem;
+            padding: .8rem;
+            background: #fff;
+        }
+
+        .smart-upload-preview.show { display: block; }
+
+        .smart-upload-preview-body {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            flex-wrap: wrap;
+        }
+
+        .smart-upload-preview img {
+            width: 92px;
+            height: 92px;
+            object-fit: cover;
+            border-radius: .9rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .smart-upload-file-icon {
+            width: 92px;
+            height: 92px;
+            border-radius: .9rem;
+            background: rgba(0,207,232,0.12);
+            color: var(--info);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .smart-upload-meta {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .smart-upload-file-name {
+            font-weight: 700;
+            color: #2f3349;
+            word-break: break-word;
+            margin-bottom: .25rem;
+        }
+
+        .smart-upload-file-help {
+            color: var(--muted);
+            font-size: .8rem;
+        }
+
+        @media (max-width: 1199px) {
+            .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 991px) {
+            .main-menu { transform: translateX(-100%); }
+            .main-menu.active { transform: translateX(0); }
+            .app-content { margin-left: 0 !important; }
+            .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .subgrid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 767px) {
+            .header-navbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .summary-grid { grid-template-columns: 1fr; }
+
+            .section-header,
+            .line-item-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .actions-inline { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-menu" id="sidebar">
+        <div class="navbar-header">
+            <h4 class="brand-title">MI SISTEMA</h4>
+            <div class="brand-subtitle">Gestión organizada</div>
+        </div>
+
+        <ul class="navigation">
+            <li><a href="index.html"><i class="fas fa-home mr-3"></i><span class="nav-link-label">Dashboard</span></a></li>
+
+            <li class="nav-item has-sub open active-parent" data-group="inventario">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-box-open mr-3"></i>
+                    <span class="nav-link-label">Inventario</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="#inventario-items" data-section="inventario-items">Items</a></li>
+                    <li><a href="#inventario-rauda" data-section="inventario-rauda">Rauda</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub open" data-group="clientes">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-users mr-3"></i>
+                    <span class="nav-link-label">Clientes</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="#clientes-crear" data-section="clientes-crear">Crear Nuevo Cliente</a></li>
+                    <li><a href="#clientes-mostrar" data-section="clientes-mostrar">Mostrar Clientes</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub open" data-group="caex">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-shipping-fast mr-3"></i>
+                    <span class="nav-link-label">CAEX Envíos</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="#caex-crear" data-section="caex-crear">Nuevo Envío</a></li>
+                    <li><a href="#caex-historial" data-section="caex-historial">Historial CAEX</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub open" data-group="ventas">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-cash-register mr-3"></i>
+                    <span class="nav-link-label">Ventas</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="#ventas-encuentro" data-section="ventas-encuentro">Encuentro</a></li>
+                    <li><a href="#ventas-moto" data-section="ventas-moto">Envío Moto</a></li>
+                    <li><a href="#ventas-caex" data-section="ventas-caex">Envío CAEX</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="app-content">
+        <nav class="header-navbar">
+            <div class="header-left">
+                <div class="toggle-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+                <span>Inventario y operaciones</span>
+            </div>
+            <div class="header-chip">Menú subdividido sin perder el estilo</div>
+        </nav>
+
+        <div id="lowStockAlert" class="alert-soft"></div>
+
+        <div class="summary-grid">
+            <div class="summary-card summary-primary">
+                <div class="summary-icon"><i class="fas fa-boxes"></i></div>
+                <div class="summary-label">Items</div>
+                <div class="summary-value" id="summaryItems">0</div>
+            </div>
+            <div class="summary-card summary-success">
+                <div class="summary-icon"><i class="fas fa-warehouse"></i></div>
+                <div class="summary-label">Rauda</div>
+                <div class="summary-value" id="summaryRauda">0</div>
+            </div>
+            <div class="summary-card summary-info">
+                <div class="summary-icon"><i class="fas fa-users"></i></div>
+                <div class="summary-label">Clientes</div>
+                <div class="summary-value" id="summaryClients">0</div>
+            </div>
+            <div class="summary-card summary-warning">
+                <div class="summary-icon"><i class="fas fa-truck"></i></div>
+                <div class="summary-label">CAEX Envíos</div>
+                <div class="summary-value" id="summaryCaex">0</div>
+            </div>
+            <div class="summary-card summary-danger">
+                <div class="summary-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div class="summary-label">Ventas</div>
+                <div class="summary-value" id="summarySales">0</div>
+            </div>
+        </div>
+
+        <section id="inventario-items" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-box-open"></i></span>
+                        Inventario · Items
+                    </h2>
+                    <p class="section-subtitle">Nombre, cantidad stock, costo inversión, mínimo para alerta al iniciar y foto del producto.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-layer-group"></i> Inventario 1</span>
+            </div>
+            <div class="section-body">
+                <div class="subgrid">
+                    <div class="subpanel">
+                        <div class="subpanel-title">Agregar producto a Items</div>
+                        <form id="itemsForm">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Nombre de producto</label>
+                                    <input type="text" class="form-control" id="itemsName" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Cantidad stock</label>
+                                    <input type="number" class="form-control" id="itemsStock" min="0" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Costo inversión</label>
+                                    <input type="number" class="form-control" id="itemsCost" min="0" step="0.01" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Mínimo para alerta</label>
+                                    <input type="number" class="form-control" id="itemsMin" min="0" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Foto del producto</label>
+                                <div class="smart-upload" id="itemsPhotoUploader">
+                                    <div class="smart-upload-head">
+                                        <div>
+                                            <div class="smart-upload-title">Agregar imagen</div>
+                                            <div class="smart-upload-hint">Compatible con <strong>Ctrl + V</strong>, archivo normal y botón de <strong>cámara</strong> para abrir directo la cámara del teléfono.</div>
+                                        </div>
+                                        <div class="smart-upload-actions">
+                                            <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('itemsPhoto')"><i class="fas fa-image mr-1"></i>Archivo</button>
+                                            <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('itemsPhotoCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
+                                            <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUploadSelection('itemsPhoto')"><i class="fas fa-times mr-1"></i>Quitar</button>
+                                        </div>
+                                    </div>
+                                    <div class="smart-upload-zone" id="itemsPhotoZone" tabindex="0">
+                                        <div>
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <strong>Pega o selecciona una imagen</strong>
+                                            <span>Haz clic aquí y usa Ctrl + V, o toca Cámara en el teléfono. Se agrega de una en una.</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="itemsPhoto" accept="image/*" hidden>
+                                    <input type="file" id="itemsPhotoCamera" accept="image/*" capture="environment" hidden>
+                                    <div class="smart-upload-preview" id="itemsPhotoPreview">
+                                        <div class="smart-upload-preview-body">
+                                            <img id="itemsPhotoPreviewImg" alt="Vista previa" style="display:none;">
+                                            <div class="smart-upload-file-icon" id="itemsPhotoPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
+                                            <div class="smart-upload-meta">
+                                                <div class="smart-upload-file-name" id="itemsPhotoPreviewName">Sin archivo</div>
+                                                <div class="smart-upload-file-help">La imagen quedará lista para guardarse con el producto.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary-soft btn-block">Guardar en Items</button>
+                        </form>
+                    </div>
+
+                    <div class="subpanel">
+                        <div class="subpanel-title">Productos registrados en Items</div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Foto</th>
+                                        <th>Producto</th>
+                                        <th>Stock</th>
+                                        <th>Costo inversión</th>
+                                        <th>Mínimo</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="inventario-rauda" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-warehouse"></i></span>
+                        Inventario · Rauda
+                    </h2>
+                    <p class="section-subtitle">Nombre de producto, cantidad stock, costo inversión y foto del producto.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-archive"></i> Inventario 2</span>
+            </div>
+            <div class="section-body">
+                <div class="subgrid">
+                    <div class="subpanel">
+                        <div class="subpanel-title">Agregar producto a Rauda</div>
+                        <form id="raudaForm">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Nombre de producto</label>
+                                    <input type="text" class="form-control" id="raudaName" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Cantidad stock</label>
+                                    <input type="number" class="form-control" id="raudaStock" min="0" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Costo inversión</label>
+                                    <input type="number" class="form-control" id="raudaCost" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Foto del producto</label>
+                                <div class="smart-upload" id="raudaPhotoUploader">
+                                    <div class="smart-upload-head">
+                                        <div>
+                                            <div class="smart-upload-title">Agregar imagen</div>
+                                            <div class="smart-upload-hint">Compatible con <strong>Ctrl + V</strong>, archivo normal y botón de <strong>cámara</strong> para abrir directo la cámara del teléfono.</div>
+                                        </div>
+                                        <div class="smart-upload-actions">
+                                            <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('raudaPhoto')"><i class="fas fa-image mr-1"></i>Archivo</button>
+                                            <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('raudaPhotoCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
+                                            <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUploadSelection('raudaPhoto')"><i class="fas fa-times mr-1"></i>Quitar</button>
+                                        </div>
+                                    </div>
+                                    <div class="smart-upload-zone" id="raudaPhotoZone" tabindex="0">
+                                        <div>
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <strong>Pega o selecciona una imagen</strong>
+                                            <span>Haz clic aquí y usa Ctrl + V, o toca Cámara en el teléfono. Se agrega de una en una.</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="raudaPhoto" accept="image/*" hidden>
+                                    <input type="file" id="raudaPhotoCamera" accept="image/*" capture="environment" hidden>
+                                    <div class="smart-upload-preview" id="raudaPhotoPreview">
+                                        <div class="smart-upload-preview-body">
+                                            <img id="raudaPhotoPreviewImg" alt="Vista previa" style="display:none;">
+                                            <div class="smart-upload-file-icon" id="raudaPhotoPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
+                                            <div class="smart-upload-meta">
+                                                <div class="smart-upload-file-name" id="raudaPhotoPreviewName">Sin archivo</div>
+                                                <div class="smart-upload-file-help">La imagen quedará lista para guardarse con el producto.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary-soft btn-block">Guardar en Rauda</button>
+                        </form>
+                    </div>
+
+                    <div class="subpanel">
+                        <div class="subpanel-title">Productos registrados en Rauda</div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Foto</th>
+                                        <th>Producto</th>
+                                        <th>Stock</th>
+                                        <th>Costo inversión</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="raudaTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="clientes-crear" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-user-plus"></i></span>
+                        Clientes · Añadir cliente
+                    </h2>
+                    <p class="section-subtitle">Nombre, hasta 3 números telefónicos, departamento y poblado.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-address-book"></i> Registro de clientes</span>
+            </div>
+            <div class="section-body">
+                <form id="clientsForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Nombre</label>
+                            <input type="text" class="form-control" id="clientName" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Departamento</label>
+                            <input type="text" class="form-control" id="clientDepartment" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Poblado</label>
+                            <input type="text" class="form-control" id="clientTown" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Número telefónico principal</label>
+                            <input type="text" class="form-control" id="clientPhone1" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Número telefónico 2 (opcional)</label>
+                            <input type="text" class="form-control" id="clientPhone2">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Número telefónico 3 (opcional)</label>
+                            <input type="text" class="form-control" id="clientPhone3">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary-soft">Guardar cliente</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="clientes-mostrar" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-users"></i></span>
+                        Clientes · Mostrar clientes
+                    </h2>
+                    <p class="section-subtitle">Listado de clientes registrados con teléfonos y ubicación.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-list"></i> Clientes guardados</span>
+            </div>
+            <div class="section-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Teléfonos</th>
+                                <th>Departamento</th>
+                                <th>Poblado</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="caex-crear" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-shipping-fast"></i></span>
+                        CAEX Envíos · Nuevo envío
+                    </h2>
+                    <p class="section-subtitle">Selecciona un cliente existente o crea uno nuevo. Si lo creas aquí, también queda guardado en Clientes.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-truck-loading"></i> Alta de envío</span>
+            </div>
+            <div class="section-body">
+                <div class="radio-card-group">
+                    <div class="radio-card">
+                        <input type="radio" id="caexModeExisting" name="caexMode" value="existing" checked>
+                        <label for="caexModeExisting">
+                            <div class="radio-title">Seleccionar cliente agregado</div>
+                            <p class="radio-help">Usa uno de los clientes ya guardados.</p>
+                        </label>
+                    </div>
+                    <div class="radio-card">
+                        <input type="radio" id="caexModeNew" name="caexMode" value="new">
+                        <label for="caexModeNew">
+                            <div class="radio-title">Añadir cliente nuevo</div>
+                            <p class="radio-help">Se guardará el cliente al mismo tiempo que el envío.</p>
+                        </label>
+                    </div>
+                </div>
+
+                <form id="caexForm">
+                    <div id="caexExistingPanel" class="subpanel mb-3">
+                        <div class="subpanel-title">Seleccionar cliente ya registrado</div>
+                        <div class="form-group mb-0">
+                            <label>Cliente</label>
+                            <select id="caexClientSelect" class="custom-select"></select>
+                        </div>
+                    </div>
+
+                    <div id="caexNewPanel" class="subpanel mb-3 hidden-panel">
+                        <div class="subpanel-title">Datos del nuevo cliente</div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Nombre</label>
+                                <input type="text" class="form-control" id="caexName">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Departamento</label>
+                                <input type="text" class="form-control" id="caexDepartment">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Poblado</label>
+                                <input type="text" class="form-control" id="caexTown">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Número telefónico principal</label>
+                                <input type="text" class="form-control" id="caexPhone1">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Número telefónico 2 (opcional)</label>
+                                <input type="text" class="form-control" id="caexPhone2">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Número telefónico 3 (opcional)</label>
+                                <input type="text" class="form-control" id="caexPhone3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Comprobante de pago</label>
+                        <div class="smart-upload" id="caexReceiptUploader">
+                            <div class="smart-upload-head">
+                                <div>
+                                    <div class="smart-upload-title">Agregar comprobante</div>
+                                    <div class="smart-upload-hint">Puedes pegar una <strong>imagen</strong> con Ctrl + V, subir imagen/PDF o usar <strong>cámara</strong> para tomar la foto del comprobante desde el teléfono.</div>
+                                </div>
+                                <div class="smart-upload-actions">
+                                    <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('caexReceipt')"><i class="fas fa-file-upload mr-1"></i>Archivo</button>
+                                    <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('caexReceiptCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
+                                    <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUploadSelection('caexReceipt')"><i class="fas fa-times mr-1"></i>Quitar</button>
+                                </div>
+                            </div>
+                            <div class="smart-upload-zone" id="caexReceiptZone" tabindex="0">
+                                <div>
+                                    <i class="fas fa-receipt"></i>
+                                    <strong>Pega, sube o toma la foto del comprobante</strong>
+                                    <span>Haz clic aquí y usa Ctrl + V, o toca Cámara en el teléfono. Se agrega de una en una.</span>
+                                </div>
+                            </div>
+                            <input type="file" id="caexReceipt" accept="image/*,.pdf" hidden>
+                            <input type="file" id="caexReceiptCamera" accept="image/*" capture="environment" hidden>
+                            <div class="smart-upload-preview" id="caexReceiptPreview">
+                                <div class="smart-upload-preview-body">
+                                    <img id="caexReceiptPreviewImg" alt="Vista previa" style="display:none;">
+                                    <div class="smart-upload-file-icon" id="caexReceiptPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
+                                    <div class="smart-upload-meta">
+                                        <div class="smart-upload-file-name" id="caexReceiptPreviewName">Sin archivo</div>
+                                        <div class="smart-upload-file-help">Se aceptan imágenes o PDF. La cámara toma una foto y la agrega directo.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-soft">Guardar envío CAEX</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="caex-historial" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-history"></i></span>
+                        CAEX Envíos · Historial
+                    </h2>
+                    <p class="section-subtitle">Envíos registrados con acceso rápido al comprobante.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-receipt"></i> Historial</span>
+            </div>
+            <div class="section-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Teléfonos</th>
+                                <th>Departamento</th>
+                                <th>Poblado</th>
+                                <th>Comprobante</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="caexTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="ventas-encuentro" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-handshake"></i></span>
+                        Ventas · Encuentro
+                    </h2>
+                    <p class="section-subtitle">Nombre de producto, hora de entrega, número de teléfono y costo total a cobrar.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-store"></i> Venta presencial</span>
+            </div>
+            <div class="section-body">
+                <div class="subgrid">
+                    <div class="subpanel">
+                        <div class="subpanel-title">Registrar venta por encuentro</div>
+                        <form id="encuentroForm">
+                            <div class="form-group">
+                                <label>Nombre de producto</label>
+                                <input type="text" class="form-control" id="encuentroProduct" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Hora de entrega</label>
+                                    <input type="text" class="form-control" id="encuentroTime" placeholder="Ej. 4:30 PM" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Número teléfono</label>
+                                    <input type="text" class="form-control" id="encuentroPhone" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Costo total a cobrar</label>
+                                <input type="number" class="form-control" id="encuentroTotal" min="0" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary-soft btn-block">Guardar venta Encuentro</button>
+                        </form>
+                    </div>
+
+                    <div class="subpanel">
+                        <div class="subpanel-title">Ventas registradas por encuentro</div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Hora</th>
+                                        <th>Teléfono</th>
+                                        <th>Total</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="encuentroTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ventas-moto" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-motorcycle"></i></span>
+                        Ventas · Envío Moto
+                    </h2>
+                    <p class="section-subtitle">Nombre de producto, dirección de entrega, hora, teléfono y costo total a cobrar.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-route"></i> Entrega local</span>
+            </div>
+            <div class="section-body">
+                <div class="subgrid">
+                    <div class="subpanel">
+                        <div class="subpanel-title">Registrar envío por moto</div>
+                        <form id="motoForm">
+                            <div class="form-group">
+                                <label>Nombre de producto</label>
+                                <input type="text" class="form-control" id="motoProduct" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Dirección de entrega</label>
+                                <input type="text" class="form-control" id="motoAddress" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Hora de entrega</label>
+                                    <input type="text" class="form-control" id="motoTime" placeholder="Ej. 2:00 PM" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Número teléfono</label>
+                                    <input type="text" class="form-control" id="motoPhone" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Costo total a cobrar</label>
+                                <input type="number" class="form-control" id="motoTotal" min="0" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary-soft btn-block">Guardar venta Moto</button>
+                        </form>
+                    </div>
+
+                    <div class="subpanel">
+                        <div class="subpanel-title">Ventas registradas por moto</div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Dirección</th>
+                                        <th>Hora</th>
+                                        <th>Teléfono</th>
+                                        <th>Total</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="motoTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ventas-caex" class="section-card anchor-offset">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                        Ventas · Envío CAEX
+                    </h2>
+                    <p class="section-subtitle">Selecciona un cliente de CAEX Envíos, agrega varios productos del inventario y controla anticipos o pago total anticipado.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-boxes"></i> Venta con múltiples productos</span>
+            </div>
+            <div class="section-body">
+                <div class="subgrid">
+                    <div class="subpanel">
+                        <div class="subpanel-title">Registrar envío CAEX</div>
+                        <form id="ventaCaexForm">
+                            <div class="form-group">
+                                <label>Seleccionar cliente desde CAEX Envíos</label>
+                                <select id="ventaCaexClientSelect" class="custom-select"></select>
+                            </div>
+
+                            <div id="ventaCaexClientInfo" class="mb-3"></div>
+
+                            <div class="line-items-box mb-3">
+                                <div class="subpanel-title mb-3">Agregar productos desde inventario</div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Inventario</label>
+                                        <select id="lineInventoryType" class="custom-select">
+                                            <option value="items">Items</option>
+                                            <option value="rauda">Rauda</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-5">
+                                        <label>Producto</label>
+                                        <select id="lineProductSelect" class="custom-select"></select>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Unidades</label>
+                                        <input type="number" id="lineUnits" class="form-control" min="1" value="1">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-soft mb-3" id="addLineItemBtn">Agregar producto</button>
+                                <div id="ventaCaexLineItems"></div>
+                            </div>
+
+                            <div class="payment-box">
+                                <div class="payment-box-title">Forma de pago</div>
+                                <div class="switch-box">
+                                    <input type="checkbox" id="caexFullPrepaid">
+                                    <label for="caexFullPrepaid" class="mb-0">Pagó todo anticipado</label>
+                                </div>
+
+                                <div id="partialPaymentFields">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label>Costo paga al recibir</label>
+                                            <input type="number" class="form-control" id="caexPayOnDelivery" min="0" step="0.01">
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label>Monto anticipado</label>
+                                            <input type="number" class="form-control" id="caexAdvanceAmount" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="fullPaymentField" class="hidden-panel">
+                                    <div class="form-group mb-0">
+                                        <label>Total pagado anticipado</label>
+                                        <input type="number" class="form-control" id="caexFullAmount" min="0" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-soft btn-block mt-3">Guardar venta CAEX</button>
+                        </form>
+                    </div>
+
+                    <div class="subpanel">
+                        <div class="subpanel-title">Ventas CAEX registradas</div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Productos</th>
+                                        <th>Pago</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ventaCaexTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal-soft" id="detailModal">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h4 class="modal-title" id="modalTitle">Detalle</h4>
+                <button class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-outline-soft" id="modalCloseBtn2">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-soft" id="toastSoft"></div>
+
+    <script>
+        const STORAGE_KEYS = {
+            items: 'mi_sistema_items_inventory',
+            rauda: 'mi_sistema_rauda_inventory',
+            clients: 'mi_sistema_clients',
+            caex: 'mi_sistema_caex_shipments',
+            salesEncuentro: 'mi_sistema_sales_encuentro',
+            salesMoto: 'mi_sistema_sales_moto',
+            salesCaex: 'mi_sistema_sales_caex'
+        };
+
+        let tempCaexLineItems = [];
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function readStore(key) {
+            try {
+                return JSON.parse(localStorage.getItem(key)) || [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveStore(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function generateId(prefix = 'id') {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return `${prefix}_${window.crypto.randomUUID()}`;
+            }
+            return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        }
+
+        function nowText() {
+            return new Date().toLocaleString('es-HN');
+        }
+
+        function nowIso() {
+            return new Date().toISOString();
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatMoney(value) {
+            if (value === '' || value === null || value === undefined) return '-';
+            return 'L ' + Number(value || 0).toFixed(2);
+        }
+
+        function getPhones(phone1, phone2, phone3) {
+            return [phone1, phone2, phone3].map(v => (v || '').trim()).filter(Boolean);
+        }
+
+        function fileToDataUrl(file) {
+            return new Promise(resolve => {
+                if (!file) {
+                    resolve('');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ''));
+                reader.onerror = () => resolve('');
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function openUploadPicker(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) input.click();
+        }
+
+        function setInputFile(input, file) {
+            if (!input || !file) return;
+            try {
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                input.files = transfer.files;
+            } catch (error) {
+                console.warn('No se pudo asignar el archivo al input.', error);
+            }
+        }
+
+        function updateUploadPreview(mainInputId, file) {
+            const preview = document.getElementById(mainInputId + 'Preview');
+            const img = document.getElementById(mainInputId + 'PreviewImg');
+            const icon = document.getElementById(mainInputId + 'PreviewIcon');
+            const name = document.getElementById(mainInputId + 'PreviewName');
+
+            if (!preview || !img || !icon || !name) return;
+
+            if (!file) {
+                preview.classList.remove('show');
+                img.style.display = 'none';
+                icon.style.display = 'none';
+                img.removeAttribute('src');
+                name.textContent = 'Sin archivo';
+                return;
+            }
+
+            preview.classList.add('show');
+            name.textContent = file.name || 'Archivo seleccionado';
+
+            if ((file.type || '').startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    img.src = String(reader.result || '');
+                    img.style.display = 'block';
+                    icon.style.display = 'none';
+                };
+                reader.onerror = () => {
+                    img.style.display = 'none';
+                    icon.innerHTML = '<i class="fas fa-image"></i>';
+                    icon.style.display = 'inline-flex';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                img.style.display = 'none';
+                icon.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                icon.style.display = 'inline-flex';
+            }
+        }
+
+        function clearUploadSelection(mainInputId) {
+            const mainInput = document.getElementById(mainInputId);
+            const cameraInput = document.getElementById(mainInputId + 'Camera');
+            if (mainInput) mainInput.value = '';
+            if (cameraInput) cameraInput.value = '';
+            updateUploadPreview(mainInputId, null);
+        }
+
+        function handleSmartUploadFile(mainInputId, file, fromPaste = false) {
+            if (!file) return;
+            const mainInput = document.getElementById(mainInputId);
+            if (!mainInput) return;
+            setInputFile(mainInput, file);
+            updateUploadPreview(mainInputId, file);
+            if (fromPaste) {
+                showToast('Imagen pegada correctamente.');
+            }
+        }
+
+        function setupSmartUploader(mainInputId, options = {}) {
+            const zone = document.getElementById(mainInputId + 'Zone');
+            const mainInput = document.getElementById(mainInputId);
+            const cameraInput = document.getElementById(mainInputId + 'Camera');
+            const wrapper = document.getElementById((options.wrapperId || mainInputId + 'Uploader'));
+
+            if (!zone || !mainInput || !wrapper) return;
+
+            const acceptedPaste = options.acceptedPaste || 'image';
+
+            zone.addEventListener('click', () => {
+                zone.focus();
+                wrapper.classList.add('is-focus');
+            });
+
+            zone.addEventListener('focus', () => wrapper.classList.add('is-focus'));
+            zone.addEventListener('blur', () => wrapper.classList.remove('is-focus'));
+
+            zone.addEventListener('dragover', event => {
+                event.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', event => {
+                event.preventDefault();
+                zone.classList.remove('dragover');
+                const file = event.dataTransfer?.files?.[0];
+                if (!file) return;
+                if (acceptedPaste === 'image' && !(file.type || '').startsWith('image/')) {
+                    showToast('Aquí solo se permiten imágenes.');
+                    return;
+                }
+                handleSmartUploadFile(mainInputId, file, false);
+            });
+
+            zone.addEventListener('paste', event => {
+                const items = Array.from(event.clipboardData?.items || []);
+                const imageItem = items.find(item => (item.type || '').startsWith('image/'));
+                if (!imageItem) {
+                    if (acceptedPaste === 'image') showToast('No se detectó imagen para pegar.');
+                    return;
+                }
+                event.preventDefault();
+                const file = imageItem.getAsFile();
+                if (file) {
+                    const ext = (file.type || 'image/png').split('/')[1] || 'png';
+                    const renamed = new File([file], `pegado-${Date.now()}.${ext}`, { type: file.type || 'image/png' });
+                    handleSmartUploadFile(mainInputId, renamed, true);
+                }
+            });
+
+            mainInput.addEventListener('change', () => updateUploadPreview(mainInputId, mainInput.files?.[0] || null));
+            if (cameraInput) {
+                cameraInput.addEventListener('change', () => {
+                    const file = cameraInput.files?.[0];
+                    if (!file) return;
+                    handleSmartUploadFile(mainInputId, file, false);
+                    cameraInput.value = '';
+                });
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastSoft');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(showToast._timer);
+            showToast._timer = setTimeout(() => toast.classList.remove('show'), 2400);
+        }
+
+        function renderEmptyRow(colspan, text) {
+            return `<tr><td colspan="${colspan}"><div class="empty-state">${text}</div></td></tr>`;
+        }
+
+        function getAllInventories() {
+            return {
+                items: readStore(STORAGE_KEYS.items),
+                rauda: readStore(STORAGE_KEYS.rauda)
+            };
+        }
+
+        function renderSummary() {
+            const items = readStore(STORAGE_KEYS.items);
+            const rauda = readStore(STORAGE_KEYS.rauda);
+            const clients = readStore(STORAGE_KEYS.clients);
+            const caex = readStore(STORAGE_KEYS.caex);
+            const sales = readStore(STORAGE_KEYS.salesEncuentro).length + readStore(STORAGE_KEYS.salesMoto).length + readStore(STORAGE_KEYS.salesCaex).length;
+
+            document.getElementById('summaryItems').textContent = items.length;
+            document.getElementById('summaryRauda').textContent = rauda.length;
+            document.getElementById('summaryClients').textContent = clients.length;
+            document.getElementById('summaryCaex').textContent = caex.length;
+            document.getElementById('summarySales').textContent = sales;
+
+            const lowStock = items.filter(item => Number(item.minStock || 0) > 0 && Number(item.stock || 0) <= Number(item.minStock || 0));
+            const alertBox = document.getElementById('lowStockAlert');
+
+            if (!lowStock.length) {
+                alertBox.classList.remove('show');
+                alertBox.innerHTML = '';
+                return;
+            }
+
+            alertBox.classList.add('show');
+            alertBox.innerHTML = `
+                <strong><i class="fas fa-exclamation-triangle mr-2"></i>Stock bajo detectado en Items</strong>
+                <div class="mt-2">${lowStock.map(item => `${escapeHtml(item.name)} (${Number(item.stock || 0)} / mínimo ${Number(item.minStock || 0)})`).join(' · ')}</div>
+            `;
+        }
+
+        function renderInventoryTables() {
+            const items = readStore(STORAGE_KEYS.items);
+            const rauda = readStore(STORAGE_KEYS.rauda);
+
+            const itemsBody = document.getElementById('itemsTableBody');
+            if (!items.length) {
+                itemsBody.innerHTML = renderEmptyRow(7, 'No hay productos guardados en Items.');
+            } else {
+                itemsBody.innerHTML = items.map(item => {
+                    const low = Number(item.minStock || 0) > 0 && Number(item.stock || 0) <= Number(item.minStock || 0);
+                    return `
+                        <tr>
+                            <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
+                            <td><strong>${escapeHtml(item.name)}</strong></td>
+                            <td>${Number(item.stock || 0)}</td>
+                            <td>${formatMoney(item.cost)}</td>
+                            <td>${Number(item.minStock || 0)}</td>
+                            <td><span class="pill ${low ? 'pill-warning' : 'pill-success'}">${low ? 'Stock bajo' : 'Disponible'}</span></td>
+                            <td>
+                                <div class="actions-inline">
+                                    <button class="btn btn-info-soft btn-sm" onclick="viewInventoryRecord('items','${item.id}')">Ver</button>
+                                    <button class="btn btn-danger-soft btn-sm" onclick="deleteInventoryRecord('items','${item.id}')">Eliminar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const raudaBody = document.getElementById('raudaTableBody');
+            if (!rauda.length) {
+                raudaBody.innerHTML = renderEmptyRow(5, 'No hay productos guardados en Rauda.');
+            } else {
+                raudaBody.innerHTML = rauda.map(item => `
+                    <tr>
+                        <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
+                        <td><strong>${escapeHtml(item.name)}</strong></td>
+                        <td>${Number(item.stock || 0)}</td>
+                        <td>${formatMoney(item.cost)}</td>
+                        <td>
+                            <div class="actions-inline">
+                                <button class="btn btn-info-soft btn-sm" onclick="viewInventoryRecord('rauda','${item.id}')">Ver</button>
+                                <button class="btn btn-danger-soft btn-sm" onclick="deleteInventoryRecord('rauda','${item.id}')">Eliminar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function renderClientsTable() {
+            const clients = readStore(STORAGE_KEYS.clients);
+            const body = document.getElementById('clientsTableBody');
+
+            if (!clients.length) {
+                body.innerHTML = renderEmptyRow(6, 'No hay clientes registrados todavía.');
+                return;
+            }
+
+            body.innerHTML = clients.map(client => `
+                <tr>
+                    <td><strong>${escapeHtml(client.name)}</strong></td>
+                    <td>
+                        <div class="phone-tags">
+                            ${(client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join('') || '<span class="pill pill-info">Sin teléfono</span>'}
+                        </div>
+                    </td>
+                    <td>${escapeHtml(client.department || '-')}</td>
+                    <td>${escapeHtml(client.town || '-')}</td>
+                    <td>${escapeHtml(client.createdAt || '-')}</td>
+                    <td>
+                        <div class="actions-inline">
+                            <button class="btn btn-info-soft btn-sm" onclick="viewClientRecord('${client.id}')">Ver</button>
+                            <button class="btn btn-danger-soft btn-sm" onclick="deleteClientRecord('${client.id}')">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderCaexSelects() {
+            const clients = readStore(STORAGE_KEYS.clients);
+            const caexShipments = readStore(STORAGE_KEYS.caex);
+
+            const clientSelect = document.getElementById('caexClientSelect');
+            if (!clients.length) {
+                clientSelect.innerHTML = '<option value="">No hay clientes registrados</option>';
+            } else {
+                clientSelect.innerHTML = clients.map(client => `
+                    <option value="${client.id}">${escapeHtml(client.name)} · ${escapeHtml(client.department || '')}${client.town ? ' / ' + escapeHtml(client.town) : ''}</option>
+                `).join('');
+            }
+
+            const caexClientSelect = document.getElementById('ventaCaexClientSelect');
+            if (!caexShipments.length) {
+                caexClientSelect.innerHTML = '<option value="">No hay clientes en CAEX Envíos</option>';
+                document.getElementById('ventaCaexClientInfo').innerHTML = '<div class="pill pill-warning">Primero guarda un envío en CAEX Envíos.</div>';
+            } else {
+                caexClientSelect.innerHTML = caexShipments.map(shipment => `
+                    <option value="${shipment.id}">${escapeHtml(shipment.client.name)} · ${escapeHtml(shipment.client.department || '')}${shipment.client.town ? ' / ' + escapeHtml(shipment.client.town) : ''}</option>
+                `).join('');
+                renderVentaCaexClientInfo();
+            }
+        }
+
+        function renderCaexTable() {
+            const records = readStore(STORAGE_KEYS.caex);
+            const body = document.getElementById('caexTableBody');
+
+            if (!records.length) {
+                body.innerHTML = renderEmptyRow(7, 'No hay envíos CAEX guardados todavía.');
+                return;
+            }
+
+            body.innerHTML = records.map(record => `
+                <tr>
+                    <td><strong>${escapeHtml(record.client.name)}</strong></td>
+                    <td>
+                        <div class="phone-tags">
+                            ${(record.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join('') || '<span class="pill pill-info">Sin teléfono</span>'}
+                        </div>
+                    </td>
+                    <td>${escapeHtml(record.client.department || '-')}</td>
+                    <td>${escapeHtml(record.client.town || '-')}</td>
+                    <td>${record.receipt ? `<button class="btn btn-info-soft btn-sm" onclick="viewCaexReceipt('${record.id}')">Ver</button>` : '<span class="pill pill-info">Sin archivo</span>'}</td>
+                    <td>${escapeHtml(record.createdAt || '-')}</td>
+                    <td>
+                        <div class="actions-inline">
+                            <button class="btn btn-info-soft btn-sm" onclick="viewCaexRecord('${record.id}')">Ver</button>
+                            <button class="btn btn-danger-soft btn-sm" onclick="deleteCaexRecord('${record.id}')">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderEncuentroTable() {
+            const records = readStore(STORAGE_KEYS.salesEncuentro);
+            const body = document.getElementById('encuentroTableBody');
+
+            if (!records.length) {
+                body.innerHTML = renderEmptyRow(6, 'No hay ventas de encuentro registradas.');
+                return;
+            }
+
+            body.innerHTML = records.map(record => `
+                <tr>
+                    <td><strong>${escapeHtml(record.product)}</strong></td>
+                    <td>${escapeHtml(record.time)}</td>
+                    <td>${escapeHtml(record.phone)}</td>
+                    <td>${formatMoney(record.total)}</td>
+                    <td>${escapeHtml(record.createdAt)}</td>
+                    <td>
+                        <div class="actions-inline">
+                            <button class="btn btn-info-soft btn-sm" onclick="viewSimpleSale('encuentro','${record.id}')">Ver</button>
+                            <button class="btn btn-danger-soft btn-sm" onclick="deleteSimpleSale('encuentro','${record.id}')">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderMotoTable() {
+            const records = readStore(STORAGE_KEYS.salesMoto);
+            const body = document.getElementById('motoTableBody');
+
+            if (!records.length) {
+                body.innerHTML = renderEmptyRow(6, 'No hay ventas de moto registradas.');
+                return;
+            }
+
+            body.innerHTML = records.map(record => `
+                <tr>
+                    <td><strong>${escapeHtml(record.product)}</strong></td>
+                    <td>${escapeHtml(record.address)}</td>
+                    <td>${escapeHtml(record.time)}</td>
+                    <td>${escapeHtml(record.phone)}</td>
+                    <td>${formatMoney(record.total)}</td>
+                    <td>
+                        <div class="actions-inline">
+                            <button class="btn btn-info-soft btn-sm" onclick="viewSimpleSale('moto','${record.id}')">Ver</button>
+                            <button class="btn btn-danger-soft btn-sm" onclick="deleteSimpleSale('moto','${record.id}')">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderVentaCaexClientInfo() {
+            const id = document.getElementById('ventaCaexClientSelect').value;
+            const records = readStore(STORAGE_KEYS.caex);
+            const found = records.find(record => record.id === id);
+            const info = document.getElementById('ventaCaexClientInfo');
+
+            if (!found) {
+                info.innerHTML = '<div class="pill pill-warning">Selecciona un cliente de CAEX Envíos.</div>';
+                return;
+            }
+
+            info.innerHTML = `
+                <div class="subpanel">
+                    <div class="hero-inline">
+                        <span class="pill pill-info">Cliente seleccionado</span>
+                        <strong>${escapeHtml(found.client.name)}</strong>
+                    </div>
+                    <div class="mt-3">
+                        <div class="detail-list">
+                            <div class="detail-row">
+                                <span class="detail-label">Teléfonos</span>
+                                <div>${(found.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ') || '-'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Ubicación</span>
+                                <div>${escapeHtml(found.client.department || '')}${found.client.town ? ' · ' + escapeHtml(found.client.town) : ''}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLineProductOptions() {
+            const inventoryType = document.getElementById('lineInventoryType').value;
+            const inventory = readStore(inventoryType === 'items' ? STORAGE_KEYS.items : STORAGE_KEYS.rauda);
+            const select = document.getElementById('lineProductSelect');
+
+            if (!inventory.length) {
+                select.innerHTML = '<option value="">No hay productos</option>';
+                return;
+            }
+
+            select.innerHTML = inventory.map(item => `
+                <option value="${item.id}">${escapeHtml(item.name)} · Stock ${Number(item.stock || 0)}</option>
+            `).join('');
+        }
+
+        function renderTempLineItems() {
+            const box = document.getElementById('ventaCaexLineItems');
+
+            if (!tempCaexLineItems.length) {
+                box.innerHTML = '<div class="pill pill-info">Aún no has agregado productos a esta venta.</div>';
+                return;
+            }
+
+            box.innerHTML = tempCaexLineItems.map(item => `
+                <div class="line-item-row">
+                    <div>
+                        <strong>${escapeHtml(item.productName)}</strong>
+                        <div class="text-muted small">Inventario: ${item.inventoryType === 'items' ? 'Items' : 'Rauda'} · Unidades: ${Number(item.units)}</div>
+                    </div>
+                    <button type="button" class="btn btn-danger-soft btn-sm" onclick="removeTempLineItem('${item.uid}')">Quitar</button>
+                </div>
+            `).join('');
+        }
+
+        function renderVentaCaexTable() {
+            const records = readStore(STORAGE_KEYS.salesCaex);
+            const body = document.getElementById('ventaCaexTableBody');
+
+            if (!records.length) {
+                body.innerHTML = renderEmptyRow(5, 'No hay ventas CAEX registradas.');
+                return;
+            }
+
+            body.innerHTML = records.map(record => `
+                <tr>
+                    <td><strong>${escapeHtml(record.client.name)}</strong></td>
+                    <td>${record.items.map(item => `${escapeHtml(item.productName)} (${Number(item.units)})`).join('<br>')}</td>
+                    <td>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</td>
+                    <td>${escapeHtml(record.createdAt)}</td>
+                    <td>
+                        <div class="actions-inline">
+                            <button class="btn btn-info-soft btn-sm" onclick="viewVentaCaexRecord('${record.id}')">Ver</button>
+                            <button class="btn btn-danger-soft btn-sm" onclick="deleteVentaCaexRecord('${record.id}')">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function refreshEverything() {
+            renderSummary();
+            renderInventoryTables();
+            renderClientsTable();
+            renderCaexSelects();
+            renderCaexTable();
+            renderEncuentroTable();
+            renderMotoTable();
+            renderLineProductOptions();
+            renderTempLineItems();
+            renderVentaCaexTable();
+            applyActiveSection();
+        }
+
+        async function handleItemsFormSubmit(event) {
+            event.preventDefault();
+            const items = readStore(STORAGE_KEYS.items);
+            items.push({
+                id: generateId('item'),
+                name: document.getElementById('itemsName').value.trim(),
+                stock: Number(document.getElementById('itemsStock').value),
+                cost: Number(document.getElementById('itemsCost').value),
+                minStock: Number(document.getElementById('itemsMin').value),
+                photo: await fileToDataUrl(document.getElementById('itemsPhoto').files[0]),
+                createdAt: nowText(),
+                createdAtISO: nowIso()
+            });
+            saveStore(STORAGE_KEYS.items, items);
+            event.target.reset();
+            clearUploadSelection('itemsPhoto');
+            refreshEverything();
+            showToast('Producto guardado en Items.');
+        }
+
+        async function handleRaudaFormSubmit(event) {
+            event.preventDefault();
+            const rauda = readStore(STORAGE_KEYS.rauda);
+            rauda.push({
+                id: generateId('rauda'),
+                name: document.getElementById('raudaName').value.trim(),
+                stock: Number(document.getElementById('raudaStock').value),
+                cost: Number(document.getElementById('raudaCost').value),
+                photo: await fileToDataUrl(document.getElementById('raudaPhoto').files[0]),
+                createdAt: nowText(),
+                createdAtISO: nowIso()
+            });
+            saveStore(STORAGE_KEYS.rauda, rauda);
+            event.target.reset();
+            clearUploadSelection('raudaPhoto');
+            refreshEverything();
+            showToast('Producto guardado en Rauda.');
+        }
+
+        function handleClientsFormSubmit(event) {
+            event.preventDefault();
+            const clients = readStore(STORAGE_KEYS.clients);
+            clients.push({
+                id: generateId('client'),
+                name: document.getElementById('clientName').value.trim(),
+                department: document.getElementById('clientDepartment').value.trim(),
+                town: document.getElementById('clientTown').value.trim(),
+                phones: getPhones(
+                    document.getElementById('clientPhone1').value,
+                    document.getElementById('clientPhone2').value,
+                    document.getElementById('clientPhone3').value
+                ),
+                createdAt: nowText(),
+                createdAtISO: nowIso()
+            });
+            saveStore(STORAGE_KEYS.clients, clients);
+            event.target.reset();
+            refreshEverything();
+            showToast('Cliente guardado correctamente.');
+        }
+
+        async function handleCaexFormSubmit(event) {
+            event.preventDefault();
+
+            const mode = document.querySelector('input[name="caexMode"]:checked').value;
+            const clients = readStore(STORAGE_KEYS.clients);
+            const caexRecords = readStore(STORAGE_KEYS.caex);
+            let clientData = null;
+
+            if (mode === 'existing') {
+                const selectedClientId = document.getElementById('caexClientSelect').value;
+                clientData = clients.find(client => client.id === selectedClientId) || null;
+                if (!clientData) {
+                    showToast('Primero selecciona un cliente existente.');
+                    return;
+                }
+            } else {
+                const name = document.getElementById('caexName').value.trim();
+                const department = document.getElementById('caexDepartment').value.trim();
+                const town = document.getElementById('caexTown').value.trim();
+                const phones = getPhones(
+                    document.getElementById('caexPhone1').value,
+                    document.getElementById('caexPhone2').value,
+                    document.getElementById('caexPhone3').value
+                );
+
+                if (!name || !department || !town || !phones.length) {
+                    showToast('Completa los datos del nuevo cliente para CAEX.');
+                    return;
+                }
+
+                clientData = {
+                    id: generateId('client'),
+                    name,
+                    department,
+                    town,
+                    phones,
+                    createdAt: nowText(),
+                    createdAtISO: nowIso()
+                };
+
+                clients.push(clientData);
+                saveStore(STORAGE_KEYS.clients, clients);
+            }
+
+            caexRecords.push({
+                id: generateId('caex'),
+                client: {
+                    id: clientData.id,
+                    name: clientData.name,
+                    department: clientData.department,
+                    town: clientData.town,
+                    phones: [...(clientData.phones || [])]
+                },
+                receipt: await fileToDataUrl(document.getElementById('caexReceipt').files[0]),
+                createdAt: nowText(),
+                createdAtISO: nowIso()
+            });
+
+            saveStore(STORAGE_KEYS.caex, caexRecords);
+            event.target.reset();
+            clearUploadSelection('caexReceipt');
+            document.getElementById('caexModeExisting').checked = true;
+            updateCaexMode();
+            refreshEverything();
+            showToast('Envío CAEX guardado correctamente.');
+        }
+
+        function handleEncuentroSubmit(event) {
+            event.preventDefault();
+            const records = readStore(STORAGE_KEYS.salesEncuentro);
+            records.push({
+                id: generateId('encuentro'),
+                product: document.getElementById('encuentroProduct').value.trim(),
+                time: document.getElementById('encuentroTime').value.trim(),
+                phone: document.getElementById('encuentroPhone').value.trim(),
+                total: Number(document.getElementById('encuentroTotal').value),
+                createdAt: nowText(),
+                createdAtISO: nowIso()
+            });
+            saveStore(STORAGE_KEYS.salesEncuentro, records);
+            event.target.reset();
+            refreshEverything();
+            showToast('Venta de encuentro guardada.');
+        }
+
+        function handleMotoSubmit(event) {
+            event.preventDefault();
+            const records = readStore(STORAGE_KEYS.salesMoto);
+            records.push({
+                id: generateId('moto'),
+                product: document.getElementById('motoProduct').value.trim(),
+                address: document.getElementById('motoAddress').value.trim(),
+                time: document.getElementById('motoTime').value.trim(),
+                phone: document.getElementById('motoPhone').value.trim(),
+                total: Number(document.getElementById('motoTotal').value),
+                createdAt: nowText(),
+                createdAtISO: nowIso()
+            });
+            saveStore(STORAGE_KEYS.salesMoto, records);
+            event.target.reset();
+            refreshEverything();
+            showToast('Venta de moto guardada.');
+        }
+
+        function addTempLineItem() {
+            const inventoryType = document.getElementById('lineInventoryType').value;
+            const productId = document.getElementById('lineProductSelect').value;
+            const units = Number(document.getElementById('lineUnits').value);
+
+            if (!productId || units <= 0) {
+                showToast('Selecciona un producto y unidades válidas.');
+                return;
+            }
+
+            const inventory = readStore(inventoryType === 'items' ? STORAGE_KEYS.items : STORAGE_KEYS.rauda);
+            const product = inventory.find(item => item.id === productId);
+
+            if (!product) {
+                showToast('No se encontró el producto seleccionado.');
+                return;
+            }
+
+            if (units > Number(product.stock || 0)) {
+                showToast('No hay suficiente stock para esa cantidad.');
+                return;
+            }
+
+            tempCaexLineItems.push({
+                uid: generateId('line'),
+                inventoryType,
+                productId,
+                productName: product.name,
+                units
+            });
+
+            renderTempLineItems();
+            document.getElementById('lineUnits').value = 1;
+            showToast('Producto agregado a la venta CAEX.');
+        }
+
+        function removeTempLineItem(uid) {
+            tempCaexLineItems = tempCaexLineItems.filter(item => item.uid !== uid);
+            renderTempLineItems();
+        }
+
+        function updatePaymentMode() {
+            const checked = document.getElementById('caexFullPrepaid').checked;
+            document.getElementById('partialPaymentFields').classList.toggle('hidden-panel', checked);
+            document.getElementById('fullPaymentField').classList.toggle('hidden-panel', !checked);
+
+            if (checked) {
+                document.getElementById('caexPayOnDelivery').value = '';
+                document.getElementById('caexAdvanceAmount').value = '';
+            } else {
+                document.getElementById('caexFullAmount').value = '';
+            }
+        }
+
+        function updateCaexMode() {
+            const mode = document.querySelector('input[name="caexMode"]:checked').value;
+            document.getElementById('caexExistingPanel').classList.toggle('hidden-panel', mode !== 'existing');
+            document.getElementById('caexNewPanel').classList.toggle('hidden-panel', mode !== 'new');
+        }
+
+        function applyStockReduction(itemsToReduce) {
+            const itemsInventory = readStore(STORAGE_KEYS.items);
+            const raudaInventory = readStore(STORAGE_KEYS.rauda);
+
+            for (const line of itemsToReduce) {
+                const inventoryArray = line.inventoryType === 'items' ? itemsInventory : raudaInventory;
+                const found = inventoryArray.find(item => item.id === line.productId);
+                if (!found) {
+                    return { ok: false, message: `El producto ${line.productName} ya no existe.` };
+                }
+                if (Number(found.stock || 0) < Number(line.units || 0)) {
+                    return { ok: false, message: `No hay suficiente stock para ${line.productName}.` };
+                }
+            }
+
+            for (const line of itemsToReduce) {
+                const inventoryArray = line.inventoryType === 'items' ? itemsInventory : raudaInventory;
+                const found = inventoryArray.find(item => item.id === line.productId);
+                found.stock = Number(found.stock || 0) - Number(line.units || 0);
+            }
+
+            saveStore(STORAGE_KEYS.items, itemsInventory);
+            saveStore(STORAGE_KEYS.rauda, raudaInventory);
+            return { ok: true };
+        }
+
+        function handleVentaCaexSubmit(event) {
+            event.preventDefault();
+
+            const shipmentId = document.getElementById('ventaCaexClientSelect').value;
+            const shipment = readStore(STORAGE_KEYS.caex).find(record => record.id === shipmentId);
+
+            if (!shipment) {
+                showToast('Selecciona un cliente desde CAEX Envíos.');
+                return;
+            }
+
+            if (!tempCaexLineItems.length) {
+                showToast('Agrega al menos un producto a la venta CAEX.');
+                return;
+            }
+
+            const fullPrepaid = document.getElementById('caexFullPrepaid').checked;
+            const payOnDelivery = document.getElementById('caexPayOnDelivery').value;
+            const advanceAmount = document.getElementById('caexAdvanceAmount').value;
+            const fullAmount = document.getElementById('caexFullAmount').value;
+
+            if (fullPrepaid) {
+                if (fullAmount === '') {
+                    showToast('Ingresa el total pagado anticipado.');
+                    return;
+                }
+            } else {
+                if (payOnDelivery === '' && advanceAmount === '') {
+                    showToast('Ingresa el monto anticipado, el pago al recibir o marca pago total anticipado.');
+                    return;
+                }
+            }
+
+            const stockResult = applyStockReduction(tempCaexLineItems);
+            if (!stockResult.ok) {
+                showToast(stockResult.message);
+                return;
+            }
+
+            const sales = readStore(STORAGE_KEYS.salesCaex);
+            sales.push({
+                id: generateId('salecaex'),
+                shipmentId,
+                client: shipment.client,
+                items: tempCaexLineItems.map(item => ({
+                    inventoryType: item.inventoryType,
+                    productId: item.productId,
+                    productName: item.productName,
+                    units: Number(item.units)
+                })),
+                payment: fullPrepaid
+                    ? {
+                        fullPrepaid: true,
+                        fullAmount: Number(fullAmount || 0)
+                    }
+                    : {
+                        fullPrepaid: false,
+                        payOnDelivery: Number(payOnDelivery || 0),
+                        advance: Number(advanceAmount || 0)
+                    },
+                createdAt: nowText(),
+                createdAtISO: nowIso()
+            });
+
+            saveStore(STORAGE_KEYS.salesCaex, sales);
+
+            tempCaexLineItems = [];
+            event.target.reset();
+            updatePaymentMode();
+            renderTempLineItems();
+            refreshEverything();
+            showToast('Venta CAEX guardada y stock actualizado.');
+        }
+
+        function deleteInventoryRecord(type, id) {
+            const key = type === 'items' ? STORAGE_KEYS.items : STORAGE_KEYS.rauda;
+            let list = readStore(key);
+            list = list.filter(item => item.id !== id);
+            saveStore(key, list);
+            refreshEverything();
+            showToast('Producto eliminado.');
+        }
+
+        function deleteClientRecord(id) {
+            let clients = readStore(STORAGE_KEYS.clients);
+            clients = clients.filter(client => client.id !== id);
+            saveStore(STORAGE_KEYS.clients, clients);
+            refreshEverything();
+            showToast('Cliente eliminado.');
+        }
+
+        function deleteCaexRecord(id) {
+            let records = readStore(STORAGE_KEYS.caex);
+            records = records.filter(record => record.id !== id);
+            saveStore(STORAGE_KEYS.caex, records);
+            refreshEverything();
+            showToast('Envío CAEX eliminado.');
+        }
+
+        function deleteSimpleSale(type, id) {
+            const key = type === 'encuentro' ? STORAGE_KEYS.salesEncuentro : STORAGE_KEYS.salesMoto;
+            let records = readStore(key);
+            records = records.filter(record => record.id !== id);
+            saveStore(key, records);
+            refreshEverything();
+            showToast('Venta eliminada.');
+        }
+
+        function deleteVentaCaexRecord(id) {
+            let records = readStore(STORAGE_KEYS.salesCaex);
+            records = records.filter(record => record.id !== id);
+            saveStore(STORAGE_KEYS.salesCaex, records);
+            refreshEverything();
+            showToast('Venta CAEX eliminada.');
+        }
+
+        function openModal(title, html) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+
+        function viewInventoryRecord(type, id) {
+            const key = type === 'items' ? STORAGE_KEYS.items : STORAGE_KEYS.rauda;
+            const record = readStore(key).find(item => item.id === id);
+            if (!record) return;
+
+            openModal(
+                `Detalle · ${record.name}`,
+                `
+                <div class="detail-list">
+                    ${record.photo ? `<div class="text-center"><img src="${record.photo}" class="thumb-preview" alt="Foto"></div>` : ''}
+                    <div class="detail-row"><span class="detail-label">Producto</span><div>${escapeHtml(record.name)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Stock</span><div>${Number(record.stock || 0)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Costo inversión</span><div>${formatMoney(record.cost)}</div></div>
+                    ${type === 'items' ? `<div class="detail-row"><span class="detail-label">Mínimo</span><div>${Number(record.minStock || 0)}</div></div>` : ''}
+                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt || '-')}</div></div>
+                </div>
+                `
+            );
+        }
+
+        function viewClientRecord(id) {
+            const record = readStore(STORAGE_KEYS.clients).find(item => item.id === id);
+            if (!record) return;
+
+            openModal(
+                `Cliente · ${record.name}`,
+                `
+                <div class="detail-list">
+                    <div class="detail-row"><span class="detail-label">Nombre</span><div>${escapeHtml(record.name)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Teléfonos</span><div>${(record.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Departamento</span><div>${escapeHtml(record.department)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Poblado</span><div>${escapeHtml(record.town)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt || '-')}</div></div>
+                </div>
+                `
+            );
+        }
+
+        function viewCaexRecord(id) {
+            const record = readStore(STORAGE_KEYS.caex).find(item => item.id === id);
+            if (!record) return;
+
+            openModal(
+                `CAEX · ${record.client.name}`,
+                `
+                <div class="detail-list">
+                    <div class="detail-row"><span class="detail-label">Cliente</span><div>${escapeHtml(record.client.name)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Teléfonos</span><div>${(record.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Departamento</span><div>${escapeHtml(record.client.department || '-')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Poblado</span><div>${escapeHtml(record.client.town || '-')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Comprobante</span><div>${record.receipt ? '<span class="pill pill-success">Archivo cargado</span>' : '<span class="pill pill-info">Sin archivo</span>'}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt)}</div></div>
+                </div>
+                `
+            );
+        }
+
+        function viewCaexReceipt(id) {
+            const record = readStore(STORAGE_KEYS.caex).find(item => item.id === id);
+            if (!record || !record.receipt) return;
+
+            const isImage = /^data:image\//.test(record.receipt);
+            openModal(
+                `Comprobante · ${record.client.name}`,
+                isImage
+                    ? `<div class="text-center"><img src="${record.receipt}" alt="Comprobante" style="max-width:100%; border-radius: 1rem;"></div>`
+                    : `<div class="detail-row"><span class="detail-label">Archivo</span><a href="${record.receipt}" target="_blank" rel="noopener noreferrer">Abrir comprobante</a></div>`
+            );
+        }
+
+        function viewSimpleSale(type, id) {
+            const key = type === 'encuentro' ? STORAGE_KEYS.salesEncuentro : STORAGE_KEYS.salesMoto;
+            const record = readStore(key).find(item => item.id === id);
+            if (!record) return;
+
+            const extraRow = type === 'moto'
+                ? `<div class="detail-row"><span class="detail-label">Dirección</span><div>${escapeHtml(record.address)}</div></div>`
+                : '';
+
+            openModal(
+                `Venta · ${type === 'encuentro' ? 'Encuentro' : 'Moto'}`,
+                `
+                <div class="detail-list">
+                    <div class="detail-row"><span class="detail-label">Producto</span><div>${escapeHtml(record.product)}</div></div>
+                    ${extraRow}
+                    <div class="detail-row"><span class="detail-label">Hora de entrega</span><div>${escapeHtml(record.time)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Teléfono</span><div>${escapeHtml(record.phone)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Total</span><div>${formatMoney(record.total)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt)}</div></div>
+                </div>
+                `
+            );
+        }
+
+        function viewVentaCaexRecord(id) {
+            const record = readStore(STORAGE_KEYS.salesCaex).find(item => item.id === id);
+            if (!record) return;
+
+            openModal(
+                `Venta CAEX · ${record.client.name}`,
+                `
+                <div class="detail-list">
+                    <div class="detail-row"><span class="detail-label">Cliente</span><div>${escapeHtml(record.client.name)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Teléfonos</span><div>${(record.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Productos</span><div>${record.items.map(item => `${escapeHtml(item.productName)} · ${Number(item.units)} unidad(es) · ${item.inventoryType === 'items' ? 'Items' : 'Rauda'}`).join('<br>')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Pago</span><div>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt)}</div></div>
+                </div>
+                `
+            );
+        }
+
+        function applyActiveSection() {
+            const hash = window.location.hash.replace('#', '');
+            if (!hash) {
+                document.querySelectorAll('.submenu a').forEach(link => link.classList.remove('active-sub'));
+                return;
+            }
+
+            document.querySelectorAll('.submenu a').forEach(link => {
+                link.classList.toggle('active-sub', link.dataset.section === hash);
+            });
+        }
+
+        document.querySelectorAll('.menu-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.closest('.nav-item').classList.toggle('open');
+            });
+        });
+
+        document.querySelectorAll('.submenu a').forEach(link => {
+            link.addEventListener('click', () => {
+                setTimeout(applyActiveSection, 80);
+            });
+        });
+
+        document.getElementById('itemsForm').addEventListener('submit', handleItemsFormSubmit);
+        document.getElementById('raudaForm').addEventListener('submit', handleRaudaFormSubmit);
+        document.getElementById('clientsForm').addEventListener('submit', handleClientsFormSubmit);
+        document.getElementById('caexForm').addEventListener('submit', handleCaexFormSubmit);
+        document.getElementById('encuentroForm').addEventListener('submit', handleEncuentroSubmit);
+        document.getElementById('motoForm').addEventListener('submit', handleMotoSubmit);
+        document.getElementById('ventaCaexForm').addEventListener('submit', handleVentaCaexSubmit);
+
+        document.querySelectorAll('input[name="caexMode"]').forEach(input => input.addEventListener('change', updateCaexMode));
+        document.getElementById('lineInventoryType').addEventListener('change', renderLineProductOptions);
+        document.getElementById('addLineItemBtn').addEventListener('click', addTempLineItem);
+        document.getElementById('caexFullPrepaid').addEventListener('change', updatePaymentMode);
+        document.getElementById('ventaCaexClientSelect').addEventListener('change', renderVentaCaexClientInfo);
+
+        document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+        document.getElementById('modalCloseBtn2').addEventListener('click', closeModal);
+        document.getElementById('detailModal').addEventListener('click', event => {
+            if (event.target.id === 'detailModal') closeModal();
+        });
+
+        window.addEventListener('hashchange', applyActiveSection);
+
+        setupSmartUploader('itemsPhoto');
+        setupSmartUploader('raudaPhoto');
+        setupSmartUploader('caexReceipt', { acceptedPaste: 'image', wrapperId: 'caexReceiptUploader' });
+
+        updateCaexMode();
+        updatePaymentMode();
+        refreshEverything();
+    </script>
+</body>
+</html>
