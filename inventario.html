@@ -29,6 +29,7 @@
             background-color: #F8F8F8;
             margin: 0;
             color: #3b4253;
+            overflow-x: hidden;
         }
 
         .main-menu {
@@ -148,59 +149,12 @@
 
         .nav-item.open > a .nav-chevron { transform: rotate(180deg); }
 
-
-
-        .sidebar-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(16,22,58,0.44);
-            z-index: 1040;
-            opacity: 0;
-            visibility: hidden;
-            transition: .25s ease;
-        }
-
-        .sidebar-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .mobile-menu-fab {
-            position: fixed;
-            top: 14px;
-            left: 14px;
-            width: 46px;
-            height: 46px;
-            border: 0;
-            border-radius: 14px;
-            background: linear-gradient(135deg, var(--primary), rgba(115,103,240,0.82));
-            color: #fff;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 12px 26px rgba(115,103,240,0.34);
-            z-index: 2001;
-            cursor: pointer;
-            transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
-        }
-
-        .mobile-menu-fab:hover,
-        .mobile-menu-fab:focus {
-            outline: none;
-            transform: translateY(-1px);
-            box-shadow: 0 14px 28px rgba(115,103,240,0.38);
-        }
-
-        .mobile-menu-fab.is-open {
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.22);
-        }
-
         .app-content {
             margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
             padding: 1.5rem;
             transition: .3s;
+            box-sizing: border-box;
         }
 
         .header-navbar {
@@ -724,48 +678,286 @@
 
         .anchor-offset { scroll-margin-top: 24px; }
 
+
+        .smart-upload {
+            border: 1px dashed rgba(115,103,240,0.28);
+            border-radius: 1rem;
+            padding: 1rem;
+            background: linear-gradient(180deg, rgba(115,103,240,0.05), rgba(255,255,255,0.98));
+        }
+
+        .smart-upload.is-focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(115,103,240,0.08);
+        }
+
+        .smart-upload-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: .8rem;
+            flex-wrap: wrap;
+            margin-bottom: .85rem;
+        }
+
+        .smart-upload-title {
+            font-weight: 700;
+            color: #2f3349;
+            margin-bottom: .2rem;
+        }
+
+        .smart-upload-hint {
+            color: var(--muted);
+            font-size: .8rem;
+            line-height: 1.45;
+        }
+
+        .smart-upload-actions {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
+
+        .smart-upload-zone {
+            border: 1px dashed rgba(115,103,240,0.22);
+            background: rgba(115,103,240,0.05);
+            border-radius: .9rem;
+            min-height: 138px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: .2s ease;
+            outline: none;
+        }
+
+        .smart-upload-zone:hover,
+        .smart-upload-zone:focus {
+            background: rgba(115,103,240,0.09);
+            border-color: rgba(115,103,240,0.38);
+        }
+
+        .smart-upload-zone.dragover {
+            background: rgba(115,103,240,0.12);
+            border-color: var(--primary);
+        }
+
+        .smart-upload-zone i {
+            font-size: 1.55rem;
+            color: var(--primary);
+            margin-bottom: .6rem;
+            display: block;
+        }
+
+        .smart-upload-zone strong {
+            display: block;
+            font-size: .95rem;
+            color: #2f3349;
+            margin-bottom: .2rem;
+        }
+
+        .smart-upload-zone span {
+            display: block;
+            color: var(--muted);
+            font-size: .82rem;
+        }
+
+        .smart-upload-preview {
+            margin-top: .9rem;
+            display: none;
+            border: 1px solid rgba(34,41,47,0.08);
+            border-radius: 1rem;
+            padding: .8rem;
+            background: #fff;
+        }
+
+        .smart-upload-preview.show { display: block; }
+
+        .smart-upload-preview-body {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            flex-wrap: wrap;
+        }
+
+        .smart-upload-preview img {
+            width: 92px;
+            height: 92px;
+            object-fit: cover;
+            border-radius: .9rem;
+            box-shadow: var(--card-shadow);
+            background: #f5f5f8;
+        }
+
+        .smart-upload-file-icon {
+            width: 92px;
+            height: 92px;
+            border-radius: .9rem;
+            background: rgba(0,207,232,0.12);
+            color: var(--info);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .smart-upload-meta {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .smart-upload-file-name {
+            font-weight: 700;
+            color: #2f3349;
+            word-break: break-word;
+            margin-bottom: .25rem;
+        }
+
+        .smart-upload-file-help {
+            color: var(--muted);
+            font-size: .8rem;
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(16,22,58,0.45);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            pointer-events: none;
+            transition: .25s ease;
+            z-index: 1040;
+        }
+
+        .sidebar-backdrop.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mobile-menu-fab {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            width: 58px;
+            height: 58px;
+            border: 0;
+            border-radius: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.82));
+            color: #fff;
+            box-shadow: 0 12px 26px rgba(115,103,240,0.35);
+            z-index: 1200;
+            transition: opacity .22s ease, transform .22s ease, background .22s ease;
+        }
+
+        .mobile-menu-fab i {
+            font-size: 1.2rem;
+        }
+
+        .mobile-menu-fab.is-open {
+            background: #1d2452;
+        }
+
+        .mobile-menu-fab.is-hidden {
+            opacity: 1;
+            pointer-events: auto;
+            transform: none;
+        }
+
+
         @media (max-width: 1199px) {
             .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
 
         @media (max-width: 991px) {
-            .main-menu { transform: translateX(-100%); }
+            body.menu-open { overflow: hidden; }
+            .main-menu { transform: translateX(-100%); width: min(280px, 84vw); }
             .main-menu.active { transform: translateX(0); }
-            .mobile-menu-fab { display: inline-flex; }
-            .app-content { margin-left: 0 !important; padding-top: 4.9rem; }
+            .app-content {
+                margin-left: 0 !important;
+                width: 100%;
+                padding: 82px 12px 18px;
+            }
+            .header-navbar {
+                padding: .9rem 1rem;
+                min-height: 64px;
+            }
+            .toggle-btn { display: none; }
             .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .subgrid { grid-template-columns: 1fr; }
+            .subgrid { grid-template-columns: 1fr; gap: 1rem; }
+            .section-body { padding: 1rem; }
+            .subpanel { padding: .9rem; }
+            .line-item-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .line-item-row > * { width: 100%; }
+            .radio-card { flex: 1 1 100%; }
+            .mobile-menu-fab { display: inline-flex; }
         }
 
         @media (max-width: 767px) {
             .header-navbar {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: .65rem;
             }
 
+            .header-chip { font-size: .72rem; }
             .summary-grid { grid-template-columns: 1fr; }
-
             .section-header,
             .line-item-row {
                 flex-direction: column;
                 align-items: flex-start;
             }
-
+            .section-header,
+            .section-body,
+            .subpanel {
+                padding-left: .85rem;
+                padding-right: .85rem;
+            }
+            .subpanel-title { font-size: 1rem; }
             .actions-inline { width: 100%; }
+            .actions-inline .btn { width: 100%; }
+            .mini-chip { align-self: flex-start; }
+            .form-row { margin-left: 0; margin-right: 0; }
+            .form-row > .col,
+            .form-row > [class*="col-"] {
+                padding-left: 0;
+                padding-right: 0;
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            .form-control,
+            .custom-select,
+            .btn {
+                width: 100%;
+                max-width: 100%;
+            }
+            .smart-upload { padding: .85rem; }
+            .smart-upload-actions .btn { width: auto; }
+            .smart-upload-preview img,
+            .smart-upload-file-icon {
+                width: 78px;
+                height: 78px;
+            }
+            .section-card,
+            .subpanel,
+            .payment-box,
+            .line-items-box,
+            .smart-upload,
+            .header-navbar {
+                max-width: 100%;
+                overflow: hidden;
+            }
         }
-
-        @media (min-width: 992px) {
-            .sidebar-overlay { display: none !important; }
-        }
-
     </style>
 </head>
 <body>
-
-    <button class="mobile-menu-fab" id="mobileMenuFab" type="button" aria-label="Abrir menú" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </button>
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMenu()"></div>
     <div class="main-menu" id="sidebar">
         <div class="navbar-header">
             <h4 class="brand-title">MI SISTEMA</h4>
@@ -825,6 +1017,11 @@
             </li>
         </ul>
     </div>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMenu()"></div>
+    <button type="button" class="mobile-menu-fab" id="mobileMenuFab" onclick="toggleMenu()" aria-label="Abrir o cerrar menú">
+        <i class="fas fa-bars"></i>
+    </button>
 
     <div class="app-content">
         <nav class="header-navbar">
@@ -903,7 +1100,38 @@
                             </div>
                             <div class="form-group">
                                 <label>Foto del producto</label>
-                                <input type="file" class="form-control" id="itemsPhoto" accept="image/*">
+                                <div class="smart-upload" id="itemsPhotoUploader">
+                                    <div class="smart-upload-head">
+                                        <div>
+                                            <div class="smart-upload-title">Agregar imagen</div>
+                                            <div class="smart-upload-hint">Compatible con <strong>Ctrl + V</strong>, archivo normal y botón de <strong>cámara</strong> para abrir directo la cámara del teléfono.</div>
+                                        </div>
+                                        <div class="smart-upload-actions">
+                                            <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('itemsPhoto')"><i class="fas fa-image mr-1"></i>Archivo</button>
+                                            <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('itemsPhotoCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
+                                            <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUpload('itemsPhoto')"><i class="fas fa-times mr-1"></i>Quitar</button>
+                                        </div>
+                                    </div>
+                                    <div class="smart-upload-zone" id="itemsPhotoZone" tabindex="0">
+                                        <div>
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <strong>Pega o selecciona una imagen</strong>
+                                            <span>Haz clic aquí y usa Ctrl + V, toca Cámara o elige Archivo.</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="itemsPhoto" accept="image/*" hidden>
+                                    <input type="file" id="itemsPhotoCamera" accept="image/*" capture="environment" hidden>
+                                    <div class="smart-upload-preview" id="itemsPhotoPreview">
+                                        <div class="smart-upload-preview-body">
+                                            <img id="itemsPhotoPreviewImg" alt="Vista previa de Items" style="display:none;">
+                                            <div class="smart-upload-file-icon" id="itemsPhotoPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
+                                            <div class="smart-upload-meta">
+                                                <div class="smart-upload-file-name" id="itemsPhotoPreviewName">Sin archivo</div>
+                                                <div class="smart-upload-file-help">La imagen quedará lista para guardarse con el producto.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary-soft btn-block">Guardar en Items</button>
                         </form>
@@ -966,7 +1194,38 @@
                             </div>
                             <div class="form-group">
                                 <label>Foto del producto</label>
-                                <input type="file" class="form-control" id="raudaPhoto" accept="image/*">
+                                <div class="smart-upload" id="raudaPhotoUploader">
+                                    <div class="smart-upload-head">
+                                        <div>
+                                            <div class="smart-upload-title">Agregar imagen</div>
+                                            <div class="smart-upload-hint">Compatible con <strong>Ctrl + V</strong>, archivo normal y botón de <strong>cámara</strong> para abrir directo la cámara del teléfono.</div>
+                                        </div>
+                                        <div class="smart-upload-actions">
+                                            <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('raudaPhoto')"><i class="fas fa-image mr-1"></i>Archivo</button>
+                                            <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('raudaPhotoCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
+                                            <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUpload('raudaPhoto')"><i class="fas fa-times mr-1"></i>Quitar</button>
+                                        </div>
+                                    </div>
+                                    <div class="smart-upload-zone" id="raudaPhotoZone" tabindex="0">
+                                        <div>
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <strong>Pega o selecciona una imagen</strong>
+                                            <span>Haz clic aquí y usa Ctrl + V, toca Cámara o elige Archivo.</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="raudaPhoto" accept="image/*" hidden>
+                                    <input type="file" id="raudaPhotoCamera" accept="image/*" capture="environment" hidden>
+                                    <div class="smart-upload-preview" id="raudaPhotoPreview">
+                                        <div class="smart-upload-preview-body">
+                                            <img id="raudaPhotoPreviewImg" alt="Vista previa de Rauda" style="display:none;">
+                                            <div class="smart-upload-file-icon" id="raudaPhotoPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
+                                            <div class="smart-upload-meta">
+                                                <div class="smart-upload-file-name" id="raudaPhotoPreviewName">Sin archivo</div>
+                                                <div class="smart-upload-file-help">La imagen quedará lista para guardarse con el producto.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary-soft btn-block">Guardar en Rauda</button>
                         </form>
@@ -1145,7 +1404,38 @@
 
                     <div class="form-group">
                         <label>Comprobante de pago</label>
-                        <input type="file" class="form-control" id="caexReceipt" accept="image/*,.pdf">
+                        <div class="smart-upload" id="caexReceiptUploader">
+                            <div class="smart-upload-head">
+                                <div>
+                                    <div class="smart-upload-title">Agregar comprobante</div>
+                                    <div class="smart-upload-hint">Puedes pegar una <strong>imagen</strong> con Ctrl + V, subir imagen/PDF o usar <strong>cámara</strong> para tomar la foto del comprobante desde el teléfono.</div>
+                                </div>
+                                <div class="smart-upload-actions">
+                                    <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('caexReceipt')"><i class="fas fa-image mr-1"></i>Archivo</button>
+                                    <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('caexReceiptCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
+                                    <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUpload('caexReceipt')"><i class="fas fa-times mr-1"></i>Quitar</button>
+                                </div>
+                            </div>
+                            <div class="smart-upload-zone" id="caexReceiptZone" tabindex="0">
+                                <div>
+                                    <i class="fas fa-file-upload"></i>
+                                    <strong>Pega o selecciona un comprobante</strong>
+                                    <span>Admite imagen, cámara del teléfono o PDF desde Archivo.</span>
+                                </div>
+                            </div>
+                            <input type="file" id="caexReceipt" accept="image/*,.pdf" hidden>
+                            <input type="file" id="caexReceiptCamera" accept="image/*" capture="environment" hidden>
+                            <div class="smart-upload-preview" id="caexReceiptPreview">
+                                <div class="smart-upload-preview-body">
+                                    <img id="caexReceiptPreviewImg" alt="Vista previa del comprobante" style="display:none;">
+                                    <div class="smart-upload-file-icon" id="caexReceiptPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
+                                    <div class="smart-upload-meta">
+                                        <div class="smart-upload-file-name" id="caexReceiptPreviewName">Sin archivo</div>
+                                        <div class="smart-upload-file-help">Se aceptan imágenes o PDF. La cámara toma una foto y la agrega directo.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary-soft">Guardar envío CAEX</button>
@@ -1436,46 +1726,44 @@
 
         let tempCaexLineItems = [];
 
-        const MOBILE_MENU_QUERY = window.matchMedia('(max-width: 991px)');
+        let lastFocusedUploader = null;
+        const uploadFiles = {
+            itemsPhoto: null,
+            raudaPhoto: null,
+            caexReceipt: null
+        };
 
-        function isMobileMenuMode() {
-            return MOBILE_MENU_QUERY.matches;
+        function isMobileView() {
+            return window.innerWidth <= 991;
         }
 
-        function syncMenuUi() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
+        function setFabState() {
             const fab = document.getElementById('mobileMenuFab');
-            const isOpen = sidebar.classList.contains('active');
-            const mobile = isMobileMenuMode();
-
-            overlay.classList.toggle('show', mobile && isOpen);
-            fab.classList.toggle('is-open', mobile && isOpen);
-            fab.innerHTML = `<i class="fas fa-${mobile && isOpen ? 'times' : 'bars'}"></i>`;
-            fab.setAttribute('aria-label', mobile && isOpen ? 'Cerrar menú' : 'Abrir menú');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (!fab || !sidebar || !backdrop) return;
+            const open = sidebar.classList.contains('active');
+            fab.classList.toggle('is-open', open);
+            fab.innerHTML = `<i class="fas ${open ? 'fa-times' : 'fa-bars'}"></i>`;
+            backdrop.classList.toggle('show', open && isMobileView());
+            document.body.classList.toggle('menu-open', open && isMobileView());
         }
 
         function openMenu() {
-            if (!isMobileMenuMode()) return;
             document.getElementById('sidebar').classList.add('active');
-            syncMenuUi();
+            setFabState();
         }
 
         function closeMenu() {
             document.getElementById('sidebar').classList.remove('active');
-            syncMenuUi();
+            setFabState();
         }
 
-        function toggleMenu(forceState = null) {
-            if (!isMobileMenuMode()) {
-                closeMenu();
-                return;
-            }
 
+        function toggleMenu() {
             const sidebar = document.getElementById('sidebar');
-            const nextState = forceState === null ? !sidebar.classList.contains('active') : !!forceState;
-            sidebar.classList.toggle('active', nextState);
-            syncMenuUi();
+            sidebar.classList.toggle('active');
+            setFabState();
         }
 
         function readStore(key) {
@@ -1535,6 +1823,136 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        function getUploadFile(mainInputId) {
+            return uploadFiles[mainInputId] || document.getElementById(mainInputId)?.files?.[0] || null;
+        }
+
+        function openUploadPicker(inputId) {
+            const mainId = inputId.replace('Camera', '');
+            lastFocusedUploader = mainId;
+            const input = document.getElementById(inputId);
+            if (input) input.click();
+        }
+
+        function clearUpload(mainInputId) {
+            uploadFiles[mainInputId] = null;
+            const mainInput = document.getElementById(mainInputId);
+            const cameraInput = document.getElementById(mainInputId + 'Camera');
+            if (mainInput) mainInput.value = '';
+            if (cameraInput) cameraInput.value = '';
+            const preview = document.getElementById(mainInputId + 'Preview');
+            const img = document.getElementById(mainInputId + 'PreviewImg');
+            const icon = document.getElementById(mainInputId + 'PreviewIcon');
+            const name = document.getElementById(mainInputId + 'PreviewName');
+            if (preview) preview.classList.remove('show');
+            if (img) {
+                img.style.display = 'none';
+                img.src = '';
+            }
+            if (icon) icon.style.display = 'none';
+            if (name) name.textContent = 'Sin archivo';
+        }
+
+        function updateUploadPreview(mainInputId, file) {
+            const preview = document.getElementById(mainInputId + 'Preview');
+            const img = document.getElementById(mainInputId + 'PreviewImg');
+            const icon = document.getElementById(mainInputId + 'PreviewIcon');
+            const name = document.getElementById(mainInputId + 'PreviewName');
+            if (!preview || !img || !icon || !name) return;
+
+            if (!file) {
+                clearUpload(mainInputId);
+                return;
+            }
+
+            name.textContent = file.name || 'Archivo listo';
+            preview.classList.add('show');
+
+            if ((file.type || '').startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    img.src = String(reader.result || '');
+                    img.style.display = 'block';
+                    icon.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                img.style.display = 'none';
+                img.src = '';
+                icon.style.display = 'inline-flex';
+            }
+        }
+
+        function setUploadFile(mainInputId, file) {
+            if (!file) return;
+            uploadFiles[mainInputId] = file;
+            updateUploadPreview(mainInputId, file);
+        }
+
+        function bindSmartUploader(mainInputId) {
+            const uploader = document.getElementById(mainInputId + 'Uploader');
+            const zone = document.getElementById(mainInputId + 'Zone');
+            const mainInput = document.getElementById(mainInputId);
+            const cameraInput = document.getElementById(mainInputId + 'Camera');
+            if (!uploader || !zone || !mainInput) return;
+
+            const focusUploader = () => {
+                lastFocusedUploader = mainInputId;
+                uploader.classList.add('is-focus');
+            };
+            const blurUploader = () => uploader.classList.remove('is-focus');
+
+            uploader.addEventListener('click', focusUploader);
+            zone.addEventListener('click', () => {
+                focusUploader();
+                openUploadPicker(mainInputId);
+            });
+            zone.addEventListener('focus', focusUploader);
+            zone.addEventListener('blur', blurUploader);
+
+            zone.addEventListener('dragover', event => {
+                event.preventDefault();
+                focusUploader();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', event => {
+                event.preventDefault();
+                zone.classList.remove('dragover');
+                const file = event.dataTransfer?.files?.[0];
+                if (file) setUploadFile(mainInputId, file);
+            });
+
+            mainInput.addEventListener('change', () => {
+                const file = mainInput.files?.[0];
+                if (file) setUploadFile(mainInputId, file);
+                mainInput.value = '';
+            });
+
+            if (cameraInput) {
+                cameraInput.addEventListener('change', () => {
+                    const file = cameraInput.files?.[0];
+                    if (file) setUploadFile(mainInputId, file);
+                    cameraInput.value = '';
+                });
+            }
+        }
+
+        document.addEventListener('paste', event => {
+            if (!lastFocusedUploader) return;
+            const items = event.clipboardData?.items || [];
+            for (const item of items) {
+                if (item.type && item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        event.preventDefault();
+                        setUploadFile(lastFocusedUploader, file);
+                    }
+                    break;
+                }
+            }
+        });
 
         function showToast(message) {
             const toast = document.getElementById('toastSoft');
@@ -1887,12 +2305,13 @@
                 stock: Number(document.getElementById('itemsStock').value),
                 cost: Number(document.getElementById('itemsCost').value),
                 minStock: Number(document.getElementById('itemsMin').value),
-                photo: await fileToDataUrl(document.getElementById('itemsPhoto').files[0]),
+                photo: await fileToDataUrl(getUploadFile('itemsPhoto')),
                 createdAt: nowText(),
                 createdAtISO: nowIso()
             });
             saveStore(STORAGE_KEYS.items, items);
             event.target.reset();
+            clearUpload('itemsPhoto');
             refreshEverything();
             showToast('Producto guardado en Items.');
         }
@@ -1905,12 +2324,13 @@
                 name: document.getElementById('raudaName').value.trim(),
                 stock: Number(document.getElementById('raudaStock').value),
                 cost: Number(document.getElementById('raudaCost').value),
-                photo: await fileToDataUrl(document.getElementById('raudaPhoto').files[0]),
+                photo: await fileToDataUrl(getUploadFile('raudaPhoto')),
                 createdAt: nowText(),
                 createdAtISO: nowIso()
             });
             saveStore(STORAGE_KEYS.rauda, rauda);
             event.target.reset();
+            clearUpload('raudaPhoto');
             refreshEverything();
             showToast('Producto guardado en Rauda.');
         }
@@ -1990,13 +2410,14 @@
                     town: clientData.town,
                     phones: [...(clientData.phones || [])]
                 },
-                receipt: await fileToDataUrl(document.getElementById('caexReceipt').files[0]),
+                receipt: await fileToDataUrl(getUploadFile('caexReceipt')),
                 createdAt: nowText(),
                 createdAtISO: nowIso()
             });
 
             saveStore(STORAGE_KEYS.caex, caexRecords);
             event.target.reset();
+            clearUpload('caexReceipt');
             document.getElementById('caexModeExisting').checked = true;
             updateCaexMode();
             refreshEverything();
@@ -2384,8 +2805,8 @@
 
         document.querySelectorAll('.submenu a').forEach(link => {
             link.addEventListener('click', () => {
-                if (isMobileMenuMode()) closeMenu();
                 setTimeout(applyActiveSection, 80);
+                if (isMobileView()) closeMenu();
             });
         });
 
@@ -2410,16 +2831,11 @@
         });
 
         window.addEventListener('hashchange', applyActiveSection);
-        window.addEventListener('resize', syncMenuUi);
-        document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && isMobileMenuMode()) closeMenu();
-        });
-
-        document.querySelectorAll('.navigation > li > a[href]:not([href="javascript:void(0)"])').forEach(link => {
-            link.addEventListener('click', () => {
-                if (isMobileMenuMode()) closeMenu();
-            });
-        });
+        window.addEventListener('resize', setFabState);
+        bindSmartUploader('itemsPhoto');
+        bindSmartUploader('raudaPhoto');
+        bindSmartUploader('caexReceipt');
+        setFabState();
 
         updateCaexMode();
         updatePaymentMode();
