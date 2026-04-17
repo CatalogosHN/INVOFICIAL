@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Panel Inventario</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="keyauth-config.js"></script>
+    <script src="auth.js"></script>
+    <style>
+        :root {
+            --primary: #7367f0;
+            --dark: #0b1028;
+            --dark-2: #10163A;
+            --text: #f8f9ff;
+            --muted: rgba(255,255,255,0.68);
+            --border-soft: rgba(255,255,255,0.09);
+        }
+
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; }
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(115,103,240,0.22), transparent 30%),
+                radial-gradient(circle at 80% 10%, rgba(0,207,232,0.12), transparent 28%),
+                linear-gradient(180deg, #090d21 0%, #10163A 100%);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        body.auth-checking { opacity: 0; }
+        body.auth-ready { opacity: 1; transition: opacity .18s ease; }
+
+        #netBg {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: .92;
+            pointer-events: none;
+        }
+
+        .login-shell {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 470px;
+            background: rgba(9, 13, 33, 0.62);
+            border: 1px solid var(--border-soft);
+            border-radius: 28px;
+            padding: 2rem 1.7rem;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.34);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .logo-orb {
+            width: 78px;
+            height: 78px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.1rem;
+            background: linear-gradient(135deg, rgba(115,103,240,0.95), rgba(115,103,240,0.58));
+            box-shadow: 0 16px 44px rgba(115,103,240,0.36);
+            font-size: 1.8rem;
+        }
+
+        .login-title {
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.95rem;
+            margin: 0;
+            letter-spacing: .04em;
+        }
+
+        .login-title span { color: #bdb7ff; }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--muted);
+            margin-top: .6rem;
+            font-size: .95rem;
+            line-height: 1.6;
+        }
+
+        .meta-pill-row {
+            display: flex;
+            justify-content: center;
+            gap: .65rem;
+            flex-wrap: wrap;
+            margin: 1.15rem 0 1.5rem;
+        }
+
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .62rem .95rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.86);
+            font-size: .77rem;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .glass-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 22px;
+            padding: 1.2rem;
+        }
+
+        .field-label {
+            display: block;
+            font-weight: 600;
+            color: rgba(255,255,255,0.88);
+            margin-bottom: .6rem;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.46);
+        }
+
+        .input-key {
+            width: 100%;
+            height: 58px;
+            border-radius: 17px;
+            border: 1px solid rgba(255,255,255,0.11);
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            padding: 0 1rem 0 2.95rem;
+            outline: none;
+            font-weight: 500;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        .input-key:focus {
+            border-color: rgba(115,103,240,0.72);
+            box-shadow: 0 0 0 4px rgba(115,103,240,0.15);
+        }
+
+        .input-key::placeholder {
+            color: rgba(255,255,255,0.42);
+        }
+
+        .login-btn {
+            margin-top: 1rem;
+            width: 100%;
+            height: 58px;
+            border: 0;
+            border-radius: 17px;
+            color: #fff;
+            font-weight: 700;
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.78));
+            box-shadow: 0 16px 36px rgba(115,103,240,0.26);
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+            box-shadow: 0 18px 40px rgba(115,103,240,0.30);
+        }
+
+        .login-btn:disabled {
+            cursor: wait;
+            opacity: .88;
+            transform: none;
+        }
+
+        .hint-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .75rem;
+            margin-top: 1rem;
+        }
+
+        .hint-card {
+            border-radius: 18px;
+            padding: .9rem .75rem;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.07);
+            text-align: center;
+        }
+
+        .hint-card i {
+            display: inline-flex;
+            width: 40px;
+            height: 40px;
+            border-radius: 13px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: .5rem;
+            background: rgba(115,103,240,0.16);
+            color: #c8c2ff;
+        }
+
+        .hint-card strong {
+            display: block;
+            font-size: .83rem;
+            margin-bottom: .2rem;
+        }
+
+        .hint-card span {
+            display: block;
+            font-size: .72rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .login-status {
+            display: none;
+            margin-top: .95rem;
+            border-radius: 16px;
+            padding: .9rem 1rem;
+            font-size: .88rem;
+            font-weight: 600;
+        }
+
+        .login-status.error {
+            display: block;
+            background: rgba(234,84,85,0.14);
+            border: 1px solid rgba(234,84,85,0.28);
+            color: #ffd4d7;
+        }
+
+        .login-status.success {
+            display: block;
+            background: rgba(40,199,111,0.13);
+            border: 1px solid rgba(40,199,111,0.24);
+            color: #d3ffe4;
+        }
+
+        .micro-note {
+            text-align: center;
+            color: rgba(255,255,255,0.46);
+            margin-top: 1rem;
+            font-size: .76rem;
+            line-height: 1.6;
+        }
+
+        .spinner-mini {
+            width: 18px;
+            height: 18px;
+            display: inline-block;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .75s linear infinite;
+            vertical-align: middle;
+            margin-right: .45rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 575px) {
+            .login-card {
+                border-radius: 22px;
+                padding: 1.35rem 1rem;
+            }
+
+            .login-title {
+                font-size: 1.6rem;
+            }
+
+            .hint-box {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="auth-checking">
+    <canvas id="netBg" aria-hidden="true"></canvas>
+
+    <div class="login-shell">
+        <div class="login-card">
+            <div class="logo-orb"><i class="fas fa-shield-alt"></i></div>
+            <h1 class="login-title"><span id="loginAppName">PanelInventario</span></h1>
+            <p class="login-subtitle" id="loginSubtitle">Acceso con key única y bloqueo por dispositivo.</p>
+
+            <div class="meta-pill-row">
+                <span class="meta-pill"><i class="fas fa-key"></i> Solo pide key</span>
+                <span class="meta-pill"><i class="fas fa-mobile-alt"></i> PC y móvil</span>
+                <span class="meta-pill"><i class="fas fa-lock"></i> 1 dispositivo</span>
+            </div>
+
+            <div class="glass-section">
+                <form id="licenseLoginForm">
+                    <label class="field-label" for="licenseKeyInput">Ingresa tu key</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-key"></i>
+                        <input
+                            id="licenseKeyInput"
+                            class="input-key"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="Ejemplo: XXXX-XXXX-XXXX"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="login-btn" id="loginSubmitBtn">
+                        Entrar al panel <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+
+                    <div id="loginStatus" class="login-status"></div>
+                </form>
+
+                <div class="hint-box">
+                    <div class="hint-card">
+                        <i class="fas fa-fingerprint"></i>
+                        <strong>Bloqueo</strong>
+                        <span>La key se amarra al primer dispositivo o navegador usado.</span>
+                    </div>
+                    <div class="hint-card">
+                        <i class="fas fa-layer-group"></i>
+                        <strong>Panel</strong>
+                        <span>Acceso al dashboard, inventario, clientes, CAEX y ventas.</span>
+                    </div>
+                    <div class="hint-card">
+                        <i class="fas fa-star"></i>
+                        <strong>Diseño</strong>
+                        <span>Mantiene el estilo premium oscuro inspirado en tu ejemplo.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="micro-note" id="loginMeta">App: @BrayanRaudales · Versión: 1.0</div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('netBg');
+            const ctx = canvas.getContext('2d');
+            let w = 0, h = 0, dots = [];
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+                const count = Math.min(90, Math.max(42, Math.floor(w / 20)));
+                dots = Array.from({ length: count }, () => ({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.45,
+                    vy: (Math.random() - 0.5) * 0.45,
+                    r: 1 + Math.random() * 1.8
+                }));
+            }
+
+            function tick() {
+                ctx.clearRect(0, 0, w, h);
+                for (const d of dots) {
+                    d.x += d.vx;
+                    d.y += d.vy;
+                    if (d.x < -10) d.x = w + 10;
+                    if (d.x > w + 10) d.x = -10;
+                    if (d.y < -10) d.y = h + 10;
+                    if (d.y > h + 10) d.y = -10;
+                }
+
+                for (let i = 0; i < dots.length; i++) {
+                    for (let j = i + 1; j < dots.length; j++) {
+                        const a = dots[i], b = dots[j];
+                        const dx = a.x - b.x;
+                        const dy = a.y - b.y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist < 140) {
+                            const alpha = 0.18 * (1 - dist / 140);
+                            ctx.strokeStyle = 'rgba(115,103,240,' + alpha + ')';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y);
+                            ctx.lineTo(b.x, b.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                for (const d of dots) {
+                    ctx.beginPath();
+                    ctx.fillStyle = 'rgba(240,242,255,0.82)';
+                    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.fillStyle = 'rgba(115,103,240,0.42)';
+                    ctx.arc(d.x, d.y, Math.max(.8, d.r - .45), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(tick);
+            }
+
+            window.addEventListener('resize', resize, { passive: true });
+            resize();
+            tick();
+        })();
+    </script>
+</body>
+</html>
