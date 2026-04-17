@@ -9,8 +9,43 @@
             salesCaex: 'mi_sistema_sales_caex'
         };
 
+        function isMobileSidebarMode() {
+            return window.innerWidth <= 991;
+        }
+
+        function setMenuState(isOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const fab = document.getElementById('mobileMenuFab');
+
+            if (!sidebar) return;
+
+            if (!isMobileSidebarMode()) {
+                sidebar.classList.remove('active');
+                backdrop?.classList.remove('show');
+                fab?.classList.remove('is-hidden');
+                document.body.classList.remove('menu-open');
+                return;
+            }
+
+            sidebar.classList.toggle('active', Boolean(isOpen));
+            backdrop?.classList.toggle('show', Boolean(isOpen));
+            fab?.classList.toggle('is-hidden', Boolean(isOpen));
+            document.body.classList.toggle('menu-open', Boolean(isOpen));
+        }
+
+        function openMenu() {
+            setMenuState(true);
+        }
+
+        function closeMenu() {
+            setMenuState(false);
+        }
+
         function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
+            if (!isMobileSidebarMode()) return;
+            const sidebar = document.getElementById('sidebar');
+            setMenuState(!sidebar.classList.contains('active'));
         }
 
         function readStore(key) {
@@ -84,6 +119,22 @@
                 .replace(/'/g, '&#39;');
         }
 
+        function setupResponsiveSidebar() {
+            document.querySelectorAll('.navigation a[href]:not(.menu-toggle), .submenu button').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (isMobileSidebarMode()) {
+                        setTimeout(closeMenu, 120);
+                    }
+                });
+            });
+
+            window.addEventListener('resize', () => {
+                setMenuState(false);
+            });
+
+            setMenuState(false);
+        }
+
         document.querySelectorAll('.menu-toggle').forEach(toggle => {
             toggle.addEventListener('click', () => {
                 const parent = toggle.closest('.nav-item');
@@ -92,5 +143,6 @@
         });
 
         document.querySelectorAll('.nav-item.has-sub').forEach(item => item.classList.add('open'));
+        setupResponsiveSidebar();
         renderDashboard();
     

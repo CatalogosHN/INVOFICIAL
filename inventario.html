@@ -675,147 +675,6 @@
 
         .anchor-offset { scroll-margin-top: 24px; }
 
-
-        .smart-upload {
-            border: 1px dashed rgba(115,103,240,0.28);
-            border-radius: 1rem;
-            padding: 1rem;
-            background: linear-gradient(180deg, rgba(115,103,240,0.04), rgba(0,0,0,0));
-        }
-
-        .smart-upload.is-focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(115,103,240,0.08);
-        }
-
-        .smart-upload-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: .8rem;
-            flex-wrap: wrap;
-            margin-bottom: .85rem;
-        }
-
-        .smart-upload-title {
-            font-weight: 700;
-            color: #2f3349;
-            margin-bottom: .2rem;
-        }
-
-        .smart-upload-hint {
-            color: var(--muted);
-            font-size: .8rem;
-            line-height: 1.45;
-        }
-
-        .smart-upload-actions {
-            display: flex;
-            gap: .5rem;
-            flex-wrap: wrap;
-        }
-
-        .smart-upload-zone {
-            border: 1px dashed rgba(115,103,240,0.22);
-            background: rgba(115,103,240,0.05);
-            border-radius: .9rem;
-            min-height: 138px;
-            padding: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            cursor: pointer;
-            transition: .2s ease;
-            outline: none;
-        }
-
-        .smart-upload-zone:hover,
-        .smart-upload-zone:focus {
-            background: rgba(115,103,240,0.09);
-            border-color: rgba(115,103,240,0.38);
-        }
-
-        .smart-upload-zone.dragover {
-            background: rgba(115,103,240,0.12);
-            border-color: var(--primary);
-        }
-
-        .smart-upload-zone i {
-            font-size: 1.55rem;
-            color: var(--primary);
-            margin-bottom: .6rem;
-            display: block;
-        }
-
-        .smart-upload-zone strong {
-            display: block;
-            font-size: .95rem;
-            color: #2f3349;
-            margin-bottom: .2rem;
-        }
-
-        .smart-upload-zone span {
-            display: block;
-            color: var(--muted);
-            font-size: .82rem;
-        }
-
-        .smart-upload-preview {
-            margin-top: .9rem;
-            display: none;
-            border: 1px solid rgba(34,41,47,0.08);
-            border-radius: 1rem;
-            padding: .8rem;
-            background: #fff;
-        }
-
-        .smart-upload-preview.show { display: block; }
-
-        .smart-upload-preview-body {
-            display: flex;
-            align-items: center;
-            gap: .85rem;
-            flex-wrap: wrap;
-        }
-
-        .smart-upload-preview img {
-            width: 92px;
-            height: 92px;
-            object-fit: cover;
-            border-radius: .9rem;
-            box-shadow: var(--card-shadow);
-        }
-
-        .smart-upload-file-icon {
-            width: 92px;
-            height: 92px;
-            border-radius: .9rem;
-            background: rgba(0,207,232,0.12);
-            color: var(--info);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
-
-        .smart-upload-meta {
-            flex: 1;
-            min-width: 180px;
-        }
-
-        .smart-upload-file-name {
-            font-weight: 700;
-            color: #2f3349;
-            word-break: break-word;
-            margin-bottom: .25rem;
-        }
-
-        .smart-upload-file-help {
-            color: var(--muted);
-            font-size: .8rem;
-        }
-
         @media (max-width: 1199px) {
             .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
@@ -984,38 +843,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Foto del producto</label>
-                                <div class="smart-upload" id="itemsPhotoUploader">
-                                    <div class="smart-upload-head">
-                                        <div>
-                                            <div class="smart-upload-title">Agregar imagen</div>
-                                            <div class="smart-upload-hint">Compatible con <strong>Ctrl + V</strong>, archivo normal y botón de <strong>cámara</strong> para abrir directo la cámara del teléfono.</div>
-                                        </div>
-                                        <div class="smart-upload-actions">
-                                            <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('itemsPhoto')"><i class="fas fa-image mr-1"></i>Archivo</button>
-                                            <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('itemsPhotoCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
-                                            <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUploadSelection('itemsPhoto')"><i class="fas fa-times mr-1"></i>Quitar</button>
-                                        </div>
-                                    </div>
-                                    <div class="smart-upload-zone" id="itemsPhotoZone" tabindex="0">
-                                        <div>
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <strong>Pega o selecciona una imagen</strong>
-                                            <span>Haz clic aquí y usa Ctrl + V, o toca Cámara en el teléfono. Se agrega de una en una.</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="itemsPhoto" accept="image/*" hidden>
-                                    <input type="file" id="itemsPhotoCamera" accept="image/*" capture="environment" hidden>
-                                    <div class="smart-upload-preview" id="itemsPhotoPreview">
-                                        <div class="smart-upload-preview-body">
-                                            <img id="itemsPhotoPreviewImg" alt="Vista previa" style="display:none;">
-                                            <div class="smart-upload-file-icon" id="itemsPhotoPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
-                                            <div class="smart-upload-meta">
-                                                <div class="smart-upload-file-name" id="itemsPhotoPreviewName">Sin archivo</div>
-                                                <div class="smart-upload-file-help">La imagen quedará lista para guardarse con el producto.</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <input type="file" class="form-control" id="itemsPhoto" accept="image/*">
                             </div>
                             <button type="submit" class="btn btn-primary-soft btn-block">Guardar en Items</button>
                         </form>
@@ -1078,38 +906,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Foto del producto</label>
-                                <div class="smart-upload" id="raudaPhotoUploader">
-                                    <div class="smart-upload-head">
-                                        <div>
-                                            <div class="smart-upload-title">Agregar imagen</div>
-                                            <div class="smart-upload-hint">Compatible con <strong>Ctrl + V</strong>, archivo normal y botón de <strong>cámara</strong> para abrir directo la cámara del teléfono.</div>
-                                        </div>
-                                        <div class="smart-upload-actions">
-                                            <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('raudaPhoto')"><i class="fas fa-image mr-1"></i>Archivo</button>
-                                            <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('raudaPhotoCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
-                                            <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUploadSelection('raudaPhoto')"><i class="fas fa-times mr-1"></i>Quitar</button>
-                                        </div>
-                                    </div>
-                                    <div class="smart-upload-zone" id="raudaPhotoZone" tabindex="0">
-                                        <div>
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <strong>Pega o selecciona una imagen</strong>
-                                            <span>Haz clic aquí y usa Ctrl + V, o toca Cámara en el teléfono. Se agrega de una en una.</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="raudaPhoto" accept="image/*" hidden>
-                                    <input type="file" id="raudaPhotoCamera" accept="image/*" capture="environment" hidden>
-                                    <div class="smart-upload-preview" id="raudaPhotoPreview">
-                                        <div class="smart-upload-preview-body">
-                                            <img id="raudaPhotoPreviewImg" alt="Vista previa" style="display:none;">
-                                            <div class="smart-upload-file-icon" id="raudaPhotoPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
-                                            <div class="smart-upload-meta">
-                                                <div class="smart-upload-file-name" id="raudaPhotoPreviewName">Sin archivo</div>
-                                                <div class="smart-upload-file-help">La imagen quedará lista para guardarse con el producto.</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <input type="file" class="form-control" id="raudaPhoto" accept="image/*">
                             </div>
                             <button type="submit" class="btn btn-primary-soft btn-block">Guardar en Rauda</button>
                         </form>
@@ -1288,38 +1085,7 @@
 
                     <div class="form-group">
                         <label>Comprobante de pago</label>
-                        <div class="smart-upload" id="caexReceiptUploader">
-                            <div class="smart-upload-head">
-                                <div>
-                                    <div class="smart-upload-title">Agregar comprobante</div>
-                                    <div class="smart-upload-hint">Puedes pegar una <strong>imagen</strong> con Ctrl + V, subir imagen/PDF o usar <strong>cámara</strong> para tomar la foto del comprobante desde el teléfono.</div>
-                                </div>
-                                <div class="smart-upload-actions">
-                                    <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('caexReceipt')"><i class="fas fa-file-upload mr-1"></i>Archivo</button>
-                                    <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('caexReceiptCamera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
-                                    <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearUploadSelection('caexReceipt')"><i class="fas fa-times mr-1"></i>Quitar</button>
-                                </div>
-                            </div>
-                            <div class="smart-upload-zone" id="caexReceiptZone" tabindex="0">
-                                <div>
-                                    <i class="fas fa-receipt"></i>
-                                    <strong>Pega, sube o toma la foto del comprobante</strong>
-                                    <span>Haz clic aquí y usa Ctrl + V, o toca Cámara en el teléfono. Se agrega de una en una.</span>
-                                </div>
-                            </div>
-                            <input type="file" id="caexReceipt" accept="image/*,.pdf" hidden>
-                            <input type="file" id="caexReceiptCamera" accept="image/*" capture="environment" hidden>
-                            <div class="smart-upload-preview" id="caexReceiptPreview">
-                                <div class="smart-upload-preview-body">
-                                    <img id="caexReceiptPreviewImg" alt="Vista previa" style="display:none;">
-                                    <div class="smart-upload-file-icon" id="caexReceiptPreviewIcon" style="display:none;"><i class="fas fa-file"></i></div>
-                                    <div class="smart-upload-meta">
-                                        <div class="smart-upload-file-name" id="caexReceiptPreviewName">Sin archivo</div>
-                                        <div class="smart-upload-file-help">Se aceptan imágenes o PDF. La cámara toma una foto y la agrega directo.</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <input type="file" class="form-control" id="caexReceipt" accept="image/*,.pdf">
                     </div>
 
                     <button type="submit" class="btn btn-primary-soft">Guardar envío CAEX</button>
@@ -1670,144 +1436,6 @@
                 reader.onerror = () => resolve('');
                 reader.readAsDataURL(file);
             });
-        }
-
-        function openUploadPicker(inputId) {
-            const input = document.getElementById(inputId);
-            if (input) input.click();
-        }
-
-        function setInputFile(input, file) {
-            if (!input || !file) return;
-            try {
-                const transfer = new DataTransfer();
-                transfer.items.add(file);
-                input.files = transfer.files;
-            } catch (error) {
-                console.warn('No se pudo asignar el archivo al input.', error);
-            }
-        }
-
-        function updateUploadPreview(mainInputId, file) {
-            const preview = document.getElementById(mainInputId + 'Preview');
-            const img = document.getElementById(mainInputId + 'PreviewImg');
-            const icon = document.getElementById(mainInputId + 'PreviewIcon');
-            const name = document.getElementById(mainInputId + 'PreviewName');
-
-            if (!preview || !img || !icon || !name) return;
-
-            if (!file) {
-                preview.classList.remove('show');
-                img.style.display = 'none';
-                icon.style.display = 'none';
-                img.removeAttribute('src');
-                name.textContent = 'Sin archivo';
-                return;
-            }
-
-            preview.classList.add('show');
-            name.textContent = file.name || 'Archivo seleccionado';
-
-            if ((file.type || '').startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    img.src = String(reader.result || '');
-                    img.style.display = 'block';
-                    icon.style.display = 'none';
-                };
-                reader.onerror = () => {
-                    img.style.display = 'none';
-                    icon.innerHTML = '<i class="fas fa-image"></i>';
-                    icon.style.display = 'inline-flex';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                img.style.display = 'none';
-                icon.innerHTML = '<i class="fas fa-file-pdf"></i>';
-                icon.style.display = 'inline-flex';
-            }
-        }
-
-        function clearUploadSelection(mainInputId) {
-            const mainInput = document.getElementById(mainInputId);
-            const cameraInput = document.getElementById(mainInputId + 'Camera');
-            if (mainInput) mainInput.value = '';
-            if (cameraInput) cameraInput.value = '';
-            updateUploadPreview(mainInputId, null);
-        }
-
-        function handleSmartUploadFile(mainInputId, file, fromPaste = false) {
-            if (!file) return;
-            const mainInput = document.getElementById(mainInputId);
-            if (!mainInput) return;
-            setInputFile(mainInput, file);
-            updateUploadPreview(mainInputId, file);
-            if (fromPaste) {
-                showToast('Imagen pegada correctamente.');
-            }
-        }
-
-        function setupSmartUploader(mainInputId, options = {}) {
-            const zone = document.getElementById(mainInputId + 'Zone');
-            const mainInput = document.getElementById(mainInputId);
-            const cameraInput = document.getElementById(mainInputId + 'Camera');
-            const wrapper = document.getElementById((options.wrapperId || mainInputId + 'Uploader'));
-
-            if (!zone || !mainInput || !wrapper) return;
-
-            const acceptedPaste = options.acceptedPaste || 'image';
-
-            zone.addEventListener('click', () => {
-                zone.focus();
-                wrapper.classList.add('is-focus');
-            });
-
-            zone.addEventListener('focus', () => wrapper.classList.add('is-focus'));
-            zone.addEventListener('blur', () => wrapper.classList.remove('is-focus'));
-
-            zone.addEventListener('dragover', event => {
-                event.preventDefault();
-                zone.classList.add('dragover');
-            });
-
-            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-            zone.addEventListener('drop', event => {
-                event.preventDefault();
-                zone.classList.remove('dragover');
-                const file = event.dataTransfer?.files?.[0];
-                if (!file) return;
-                if (acceptedPaste === 'image' && !(file.type || '').startsWith('image/')) {
-                    showToast('Aquí solo se permiten imágenes.');
-                    return;
-                }
-                handleSmartUploadFile(mainInputId, file, false);
-            });
-
-            zone.addEventListener('paste', event => {
-                const items = Array.from(event.clipboardData?.items || []);
-                const imageItem = items.find(item => (item.type || '').startsWith('image/'));
-                if (!imageItem) {
-                    if (acceptedPaste === 'image') showToast('No se detectó imagen para pegar.');
-                    return;
-                }
-                event.preventDefault();
-                const file = imageItem.getAsFile();
-                if (file) {
-                    const ext = (file.type || 'image/png').split('/')[1] || 'png';
-                    const renamed = new File([file], `pegado-${Date.now()}.${ext}`, { type: file.type || 'image/png' });
-                    handleSmartUploadFile(mainInputId, renamed, true);
-                }
-            });
-
-            mainInput.addEventListener('change', () => updateUploadPreview(mainInputId, mainInput.files?.[0] || null));
-            if (cameraInput) {
-                cameraInput.addEventListener('change', () => {
-                    const file = cameraInput.files?.[0];
-                    if (!file) return;
-                    handleSmartUploadFile(mainInputId, file, false);
-                    cameraInput.value = '';
-                });
-            }
         }
 
         function showToast(message) {
@@ -2167,7 +1795,6 @@
             });
             saveStore(STORAGE_KEYS.items, items);
             event.target.reset();
-            clearUploadSelection('itemsPhoto');
             refreshEverything();
             showToast('Producto guardado en Items.');
         }
@@ -2186,7 +1813,6 @@
             });
             saveStore(STORAGE_KEYS.rauda, rauda);
             event.target.reset();
-            clearUploadSelection('raudaPhoto');
             refreshEverything();
             showToast('Producto guardado en Rauda.');
         }
@@ -2273,7 +1899,6 @@
 
             saveStore(STORAGE_KEYS.caex, caexRecords);
             event.target.reset();
-            clearUploadSelection('caexReceipt');
             document.getElementById('caexModeExisting').checked = true;
             updateCaexMode();
             refreshEverything();
@@ -2686,10 +2311,6 @@
         });
 
         window.addEventListener('hashchange', applyActiveSection);
-
-        setupSmartUploader('itemsPhoto');
-        setupSmartUploader('raudaPhoto');
-        setupSmartUploader('caexReceipt', { acceptedPaste: 'image', wrapperId: 'caexReceiptUploader' });
 
         updateCaexMode();
         updatePaymentMode();
