@@ -330,7 +330,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -390,7 +390,7 @@
 
         .quick-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 1rem;
         }
 
@@ -807,6 +807,13 @@
                     <li><a href="inventario.html#ventas-caex">Envío CAEX</a></li>
                 </ul>
             </li>
+
+            <li>
+                <a href="gastos.html">
+                    <i class="fas fa-receipt mr-3"></i>
+                    <span class="nav-link-label">Gastos</span>
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -837,7 +844,7 @@
             <div class="sync-card-header">
                 <div>
                     <div class="sync-card-title"><i class="fas fa-cloud"></i> Sincronización GitHub</div>
-                    <div class="sync-card-subtitle">Aquí dejas listo el token para que este dispositivo lea y guarde el mismo respaldo del inventario, clientes, ventas y fotos.</div>
+                    <div class="sync-card-subtitle">Aquí dejas listo el token para que este dispositivo lea y guarde el mismo respaldo del inventario, clientes, ventas, gastos y fotos.</div>
                 </div>
                 <span class="sync-status-chip idle" data-sync-output="chip">Token pendiente</span>
             </div>
@@ -920,6 +927,15 @@
                     <div class="stat-help">Encuentro, moto y CAEX</div>
                 </div>
             </div>
+
+            <div class="stat-card stat-info">
+                <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+                <div>
+                    <div class="stat-label">Gastos</div>
+                    <div class="stat-value" id="countExpenses">0</div>
+                    <div class="stat-help">Personales y empresa</div>
+                </div>
+            </div>
         </div>
 
         <div class="mb-4">
@@ -947,6 +963,12 @@
                     <div class="quick-icon"><i class="fas fa-file-invoice-dollar"></i></div>
                     <div class="quick-title">Venta CAEX</div>
                     <p class="quick-desc">Agrega varios productos desde inventario y controla anticipos o pago total.</p>
+                </a>
+
+                <a class="quick-card" href="gastos.html">
+                    <div class="quick-icon"><i class="fas fa-receipt"></i></div>
+                    <div class="quick-title">Gastos</div>
+                    <p class="quick-desc">Controla gastos personales y de empresa con resumen por fecha.</p>
                 </a>
             </div>
         </div>
@@ -976,7 +998,8 @@
             caex: 'mi_sistema_caex_shipments',
             salesEncuentro: 'mi_sistema_sales_encuentro',
             salesMoto: 'mi_sistema_sales_moto',
-            salesCaex: 'mi_sistema_sales_caex'
+            salesCaex: 'mi_sistema_sales_caex',
+            expenses: 'mi_sistema_expenses'
         };
 
         const MOBILE_MENU_QUERY = window.matchMedia('(max-width: 991px)');
@@ -1055,12 +1078,14 @@
             const salesEncuentro = readStore(STORAGE_KEYS.salesEncuentro);
             const salesMoto = readStore(STORAGE_KEYS.salesMoto);
             const salesCaex = readStore(STORAGE_KEYS.salesCaex);
+            const expenses = readStore(STORAGE_KEYS.expenses);
 
             document.getElementById('countItems').textContent = items.length;
             document.getElementById('countRauda').textContent = rauda.length;
             document.getElementById('countClients').textContent = clients.length;
             document.getElementById('countCaex').textContent = caex.length;
             document.getElementById('countSales').textContent = salesEncuentro.length + salesMoto.length + salesCaex.length;
+            document.getElementById('countExpenses').textContent = expenses.length;
 
             const lowStock = items.filter(item => Number(item.minStock || 0) > 0 && Number(item.stock || 0) <= Number(item.minStock || 0));
             if (!lowStock.length) {

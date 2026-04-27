@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos - Panel Inventario</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #7367f0;
+            --primary-soft: rgba(115,103,240,0.12);
+            --dark-blue: #10163A;
+            --success: #28c76f;
+            --warning: #ff9f43;
+            --info: #00cfe8;
+            --danger: #ea5455;
+            --muted: #6e6b7b;
+            --border-soft: rgba(34, 41, 47, 0.08);
+            --card-shadow: 0 8px 24px rgba(34, 41, 47, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8F8F8;
+            margin: 0;
+            color: #3b4253;
+            overflow-x: hidden;
+        }
+
+        .main-menu {
+            width: var(--sidebar-width);
+            background-color: var(--dark-blue);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1050;
+            transition: transform .3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,.5);
+            overflow-y: auto;
+        }
+
+        .navbar-header {
+            padding: 1.5rem;
+            color: #fff;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-title {
+            font-weight: 700;
+            letter-spacing: .08em;
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        .brand-subtitle {
+            margin-top: .35rem;
+            color: rgba(255,255,255,.65);
+            font-size: .78rem;
+        }
+
+        .navigation {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 1.5rem;
+        }
+
+        .navigation li { margin-bottom: 4px; }
+        .navigation li > a,
+        .submenu a {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 22px;
+            color: #b4b7bd;
+            text-decoration: none;
+            transition: 0.25s ease;
+        }
+
+        .navigation li > a:hover,
+        .submenu a:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .navigation li.active > a,
+        .nav-item.open.active-parent > a {
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.7));
+            color: #fff;
+            border-radius: 0 25px 25px 0;
+            margin-right: 15px;
+            box-shadow: 0 0 12px rgba(115,103,240,0.35);
+        }
+
+        .submenu {
+            list-style: none;
+            margin: 0;
+            padding: 4px 0 8px;
+            display: none;
+        }
+
+        .nav-item.open .submenu { display: block; }
+        .submenu a {
+            padding: 10px 22px 10px 56px;
+            font-size: .88rem;
+            position: relative;
+        }
+
+        .submenu a::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.35);
+            position: absolute;
+            left: 34px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .nav-link-label { flex: 1; }
+        .nav-chevron { transition: transform .25s ease; font-size: 0.8rem; }
+        .nav-item.open > a .nav-chevron { transform: rotate(180deg); }
+
+        .app-content {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 1.5rem;
+            transition: .3s;
+        }
+
+        .header-navbar {
+            background: #fff;
+            padding: 1rem 1.25rem;
+            border-radius: 0.85rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.35rem;
+            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            color: #2f3349;
+        }
+
+        .toggle-btn {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-right: 1rem;
+        }
+
+        .header-chip {
+            background: rgba(115,103,240,0.12);
+            color: var(--primary);
+            border-radius: 999px;
+            padding: .45rem .9rem;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1rem;
+            min-height: 108px;
+        }
+
+        .summary-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: .75rem;
+            font-size: 1.05rem;
+        }
+
+        .summary-primary .summary-icon { background: rgba(115,103,240,0.15); color: var(--primary); }
+        .summary-success .summary-icon { background: rgba(40,199,111,0.15); color: var(--success); }
+        .summary-info .summary-icon { background: rgba(0,207,232,0.15); color: var(--info); }
+        .summary-warning .summary-icon { background: rgba(255,159,67,0.18); color: var(--warning); }
+
+        .summary-label {
+            font-size: .82rem;
+            color: var(--muted);
+            margin-bottom: .25rem;
+        }
+
+        .summary-value {
+            font-size: 1.45rem;
+            font-weight: 700;
+            line-height: 1.1;
+            word-break: break-word;
+        }
+
+        .section-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            border: 0;
+        }
+
+        .section-header {
+            padding: 1.15rem 1.25rem;
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2f3349;
+        }
+
+        .title-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: .84rem;
+            margin: .25rem 0 0;
+        }
+
+        .section-body { padding: 1.25rem; }
+
+        .form-control,
+        .custom-select {
+            border-radius: .75rem;
+            min-height: 46px;
+            border: 1px solid rgba(34, 41, 47, 0.12);
+            box-shadow: none !important;
+        }
+
+        textarea.form-control { min-height: 96px; }
+        .form-group label {
+            font-weight: 600;
+            font-size: .88rem;
+            color: #444b5a;
+            margin-bottom: .45rem;
+        }
+
+        .btn-primary-soft,
+        .btn-outline-soft,
+        .btn-danger-soft,
+        .btn-info-soft,
+        .btn-success-soft {
+            border: 0;
+            border-radius: .85rem;
+            font-weight: 600;
+            padding: .72rem 1rem;
+            transition: .2s ease;
+        }
+
+        .btn-primary-soft {
+            background: linear-gradient(118deg, var(--primary), rgba(115,103,240,0.85));
+            color: #fff;
+        }
+
+        .btn-primary-soft:hover { color: #fff; transform: translateY(-1px); }
+        .btn-outline-soft { background: rgba(115,103,240,0.1); color: var(--primary); }
+        .btn-outline-soft:hover { background: rgba(115,103,240,0.16); color: var(--primary); }
+        .btn-danger-soft { background: rgba(234,84,85,0.12); color: var(--danger); }
+        .btn-info-soft { background: rgba(0,207,232,0.12); color: #008da0; }
+        .btn-success-soft { background: rgba(40,199,111,0.12); color: var(--success); }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr auto;
+            gap: .85rem;
+            align-items: end;
+        }
+
+        .expense-layout {
+            display: grid;
+            grid-template-columns: minmax(310px, 420px) minmax(0, 1fr);
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        .photo-uploader {
+            border: 1px dashed rgba(115,103,240,0.28);
+            border-radius: 1rem;
+            padding: 1rem;
+            background: linear-gradient(180deg, rgba(115,103,240,0.05), rgba(255,255,255,0.98));
+        }
+
+        .photo-preview {
+            min-height: 158px;
+            border: 1px dashed rgba(115,103,240,0.22);
+            border-radius: .9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--muted);
+            background: rgba(115,103,240,0.05);
+            overflow: hidden;
+            margin-bottom: .85rem;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-preview i {
+            display: block;
+            color: var(--primary);
+            font-size: 1.6rem;
+            margin-bottom: .55rem;
+        }
+
+        .table-responsive { border-radius: .95rem; }
+        .table { margin-bottom: 0; }
+        .table thead th {
+            background-color: #f7f7fb;
+            text-transform: uppercase;
+            font-size: .72rem;
+            letter-spacing: .04em;
+            border: 0;
+            padding: .95rem .85rem;
+            white-space: nowrap;
+            color: #6e6b7b;
+        }
+
+        .table td {
+            vertical-align: middle;
+            border-color: var(--border-soft);
+            padding: .95rem .85rem;
+            font-size: .9rem;
+        }
+
+        .thumb-mini {
+            width: 52px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: .8rem;
+            background: #f3f3f8;
+            border: 1px solid rgba(34,41,47,0.08);
+        }
+
+        .empty-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: .8rem;
+            background: rgba(115,103,240,0.1);
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .actions-inline { display: flex; flex-wrap: wrap; gap: .45rem; }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .38rem .75rem;
+            font-size: .78rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pill-primary { color: var(--primary); background: rgba(115,103,240,0.13); }
+        .pill-info { color: #008da0; background: rgba(0,207,232,0.12); }
+        .pill-success { color: var(--success); background: rgba(40,199,111,0.14); }
+        .pill-warning { color: #8a4d00; background: rgba(255,159,67,0.16); }
+        .muted-line { color: var(--muted); font-size: .8rem; margin-top: .22rem; line-height: 1.45; }
+        .empty-state { text-align: center; padding: 2.25rem 1rem; color: var(--muted); }
+
+        .modal-soft {
+            position: fixed;
+            inset: 0;
+            background: rgba(16,22,58,0.58);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4000;
+            padding: 1rem;
+        }
+
+        .modal-soft.show { display: flex; }
+        .modal-card {
+            width: min(700px, 100%);
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .modal-head,
+        .modal-body,
+        .modal-foot { padding: 1rem 1.2rem; }
+        .modal-head {
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title { font-weight: 700; margin: 0; }
+        .modal-close {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .modal-foot { border-top: 1px solid var(--border-soft); text-align: right; }
+        .detail-list { display: grid; gap: .75rem; }
+        .detail-row {
+            border: 1px solid var(--border-soft);
+            border-radius: .9rem;
+            padding: .8rem .9rem;
+            background: #fcfcfe;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: .76rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--muted);
+            margin-bottom: .2rem;
+            font-weight: 700;
+        }
+
+        .modal-photo {
+            max-width: 100%;
+            max-height: 360px;
+            border-radius: 1rem;
+            object-fit: contain;
+            background: #f7f7fb;
+        }
+
+        .toast-soft {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: #10163A;
+            color: #fff;
+            padding: .9rem 1rem;
+            border-radius: .9rem;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+            z-index: 3000;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: .25s ease;
+            pointer-events: none;
+            max-width: 320px;
+        }
+
+        .toast-soft.show { opacity: 1; transform: translateY(0); }
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(16,22,58,0.44);
+            z-index: 1040;
+            display: none;
+        }
+
+        .sidebar-backdrop.show { display: block; }
+        .mobile-menu-fab {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            width: 46px;
+            height: 46px;
+            border: 0;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary), rgba(115,103,240,0.82));
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 26px rgba(115,103,240,0.34);
+            z-index: 2001;
+            cursor: pointer;
+        }
+
+        body.auth-checking { opacity: 0; }
+        body.auth-ready { opacity: 1; transition: opacity .18s ease; }
+        .auth-widget { display: flex; align-items: center; gap: .75rem; justify-content: flex-end; flex-wrap: wrap; }
+        .auth-widget-info { display: flex; flex-direction: column; gap: .12rem; text-align: right; }
+        .auth-widget-title { font-size: .85rem; font-weight: 700; color: #3b4253; }
+        .auth-widget-meta { font-size: .72rem; color: var(--muted); }
+        .auth-pill-soft {
+            display: inline-flex;
+            align-items: center;
+            gap: .38rem;
+            padding: .52rem .85rem;
+            border-radius: 999px;
+            background: rgba(115,103,240,0.12);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: .76rem;
+        }
+
+        .auth-logout-btn {
+            border: 0;
+            border-radius: 14px;
+            background: linear-gradient(118deg, var(--danger), rgba(234,84,85,0.78));
+            color: #fff;
+            padding: .68rem 1rem;
+            font-weight: 600;
+            box-shadow: 0 10px 24px rgba(234,84,85,0.18);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1199px) {
+            .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .filters-actions { grid-column: span 2; }
+            .expense-layout { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 991px) {
+            .main-menu { transform: translateX(-100%); }
+            .main-menu.active { transform: translateX(0); }
+            .mobile-menu-fab { display: inline-flex; }
+            .app-content { margin-left: 0 !important; width: 100% !important; padding-top: 4.9rem; }
+            .auth-widget { justify-content: flex-start; width: 100%; }
+            .auth-widget-info { text-align: left; }
+        }
+
+        @media (max-width: 767px) {
+            .header-navbar { flex-direction: column; align-items: flex-start; gap: .75rem; }
+            .summary-grid,
+            .filters-grid { grid-template-columns: 1fr; }
+            .filters-actions { grid-column: span 1; }
+            .section-header { align-items: flex-start; }
+            .actions-inline .btn { width: 100%; }
+        }
+
+        @media (min-width: 992px) {
+            .sidebar-backdrop { display: none !important; }
+        }
+    </style>
+    <script src="keyauth-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="sync.js"></script>
+</head>
+<body class="auth-checking">
+    <div class="main-menu" id="sidebar">
+        <div class="navbar-header">
+            <h4 class="brand-title">MI SISTEMA</h4>
+            <div class="brand-subtitle">Gastos y resumen</div>
+        </div>
+
+        <ul class="navigation">
+            <li><a href="index.html"><i class="fas fa-home mr-3"></i><span class="nav-link-label">Dashboard</span></a></li>
+
+            <li class="nav-item has-sub open" data-group="inventario">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-box-open mr-3"></i>
+                    <span class="nav-link-label">Inventario</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#inventario-items">Items</a></li>
+                    <li><a href="inventario.html#inventario-rauda">Rauda</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub open" data-group="clientes">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-users mr-3"></i>
+                    <span class="nav-link-label">Clientes</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#clientes-crear">Crear Nuevo Cliente</a></li>
+                    <li><a href="inventario.html#clientes-mostrar">Mostrar Clientes</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub open" data-group="caex">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-shipping-fast mr-3"></i>
+                    <span class="nav-link-label">CAEX Env&iacute;os</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#caex-crear">Nuevo Env&iacute;o</a></li>
+                    <li><a href="inventario.html#caex-historial">Historial CAEX</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-sub open" data-group="ventas">
+                <a href="javascript:void(0)" class="menu-toggle">
+                    <i class="fas fa-cash-register mr-3"></i>
+                    <span class="nav-link-label">Ventas</span>
+                    <i class="fas fa-chevron-down nav-chevron"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="inventario.html#ventas-encuentro">Encuentro</a></li>
+                    <li><a href="inventario.html#ventas-moto">Env&iacute;o Moto</a></li>
+                    <li><a href="inventario.html#ventas-caex">Env&iacute;o CAEX</a></li>
+                </ul>
+            </li>
+
+            <li class="active">
+                <a href="gastos.html">
+                    <i class="fas fa-receipt mr-3"></i>
+                    <span class="nav-link-label">Gastos</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMenu()"></div>
+    <button type="button" class="mobile-menu-fab" id="mobileMenuFab" onclick="toggleMenu()" aria-label="Abrir o cerrar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-content">
+        <nav class="header-navbar">
+            <div class="header-left">
+                <div class="toggle-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+                <span>Gastos personales y empresa</span>
+            </div>
+            <div>
+                <div class="header-chip mb-2">Resumen por mes, a&ntilde;o o rango</div>
+                <div id="authWidgetMount"></div>
+            </div>
+        </nav>
+
+        <section aria-labelledby="summaryTitle">
+            <div class="section-header mb-3" style="background:#fff;border-radius:1rem;box-shadow:var(--card-shadow);">
+                <div>
+                    <h1 class="section-title" id="summaryTitle"><span class="title-icon"><i class="fas fa-chart-pie"></i></span> Resumen de gastos</h1>
+                    <p class="section-subtitle">Totales calculados con los filtros activos.</p>
+                </div>
+                <span class="pill pill-primary" id="activeFilterLabel">Mostrando todos</span>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card summary-primary">
+                    <div class="summary-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="summary-label">Total filtrado</div>
+                    <div class="summary-value" id="summaryTotal">L 0.00</div>
+                </div>
+                <div class="summary-card summary-success">
+                    <div class="summary-icon"><i class="fas fa-user"></i></div>
+                    <div class="summary-label">Gastos personales</div>
+                    <div class="summary-value" id="summaryPersonal">L 0.00</div>
+                </div>
+                <div class="summary-card summary-info">
+                    <div class="summary-icon"><i class="fas fa-building"></i></div>
+                    <div class="summary-label">Gastos empresa</div>
+                    <div class="summary-value" id="summaryCompany">L 0.00</div>
+                </div>
+                <div class="summary-card summary-warning">
+                    <div class="summary-icon"><i class="fas fa-list-ol"></i></div>
+                    <div class="summary-label">Registros filtrados</div>
+                    <div class="summary-value" id="summaryCount">0</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title"><span class="title-icon"><i class="fas fa-filter"></i></span> Filtros</h2>
+                    <p class="section-subtitle">Filtra por seccion, mes, a&ntilde;o o fecha a fecha.</p>
+                </div>
+                <button type="button" class="btn btn-outline-soft" id="clearFiltersBtn">
+                    <i class="fas fa-eraser mr-2"></i>Limpiar filtros
+                </button>
+            </div>
+            <div class="section-body">
+                <div class="filters-grid">
+                    <div class="form-group mb-0">
+                        <label for="filterType">Seccion</label>
+                        <select class="custom-select" id="filterType">
+                            <option value="all">Todas</option>
+                            <option value="personal">Gastos Personales</option>
+                            <option value="empresa">Gastos Empresa</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="filterMonth">Mes</label>
+                        <select class="custom-select" id="filterMonth">
+                            <option value="">Todos</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="filterYear">A&ntilde;o</label>
+                        <input type="number" class="form-control" id="filterYear" min="2000" max="2100" placeholder="Todos">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="filterFrom">Desde</label>
+                        <input type="date" class="form-control" id="filterFrom">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="filterTo">Hasta</label>
+                        <input type="date" class="form-control" id="filterTo">
+                    </div>
+                    <div class="filters-actions">
+                        <button type="button" class="btn btn-primary-soft btn-block" id="applyFiltersBtn">
+                            <i class="fas fa-search mr-2"></i>Aplicar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="expense-layout">
+            <section class="section-card">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title"><span class="title-icon"><i class="fas fa-plus"></i></span> <span id="formTitle">Nuevo gasto</span></h2>
+                        <p class="section-subtitle">Guarda foto, descripcion, cantidad y total.</p>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <form id="expenseForm">
+                        <input type="hidden" id="expenseId">
+                        <div class="form-group">
+                            <label for="expenseType">Seccion</label>
+                            <select class="custom-select" id="expenseType" required>
+                                <option value="personal">Gastos Personales</option>
+                                <option value="empresa">Gastos Empresa</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-5">
+                                <label for="expenseQuantity">Cantidad</label>
+                                <input type="number" class="form-control" id="expenseQuantity" min="0.01" step="0.01" value="1" required>
+                            </div>
+                            <div class="form-group col-md-7">
+                                <label for="expenseProduct">Producto</label>
+                                <input type="text" class="form-control" id="expenseProduct" placeholder="Nombre del producto" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expenseDescription">Descripcion del producto</label>
+                            <textarea class="form-control" id="expenseDescription" placeholder="Detalle del gasto"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="expenseUnitPrice">Precio unitario</label>
+                                <input type="number" class="form-control" id="expenseUnitPrice" min="0" step="0.01" placeholder="Opcional">
+                                <div class="muted-line">Si lo llenas, calcula cantidad x precio.</div>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="expenseTotal">Total gastado</label>
+                                <input type="number" class="form-control" id="expenseTotal" min="0" step="0.01" placeholder="0.00" required>
+                                <div class="muted-line">Tambien puedes escribir solo el total.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expensePhoto">Foto del producto</label>
+                            <div class="photo-uploader">
+                                <div class="photo-preview" id="photoPreview">
+                                    <div><i class="fas fa-camera"></i>Sin foto</div>
+                                </div>
+                                <input type="file" class="form-control-file" id="expensePhoto" accept="image/*">
+                                <div class="d-flex flex-wrap mt-3" style="gap:.55rem;">
+                                    <button type="button" class="btn btn-outline-soft btn-sm" id="photoPickBtn"><i class="fas fa-image mr-2"></i>Elegir foto</button>
+                                    <button type="button" class="btn btn-danger-soft btn-sm" id="photoClearBtn"><i class="fas fa-times mr-2"></i>Quitar foto</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap justify-content-end" style="gap:.65rem;">
+                            <button type="button" class="btn btn-outline-soft" id="cancelEditBtn" style="display:none;">
+                                <i class="fas fa-ban mr-2"></i>Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary-soft">
+                                <i class="fas fa-save mr-2"></i>Guardar gasto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title"><span class="title-icon"><i class="fas fa-receipt"></i></span> Registro de gastos</h2>
+                        <p class="section-subtitle">La fecha de ingreso se conserva; al editar se agrega la ultima edicion.</p>
+                    </div>
+                    <span class="pill pill-success" id="tableCountLabel">0 gastos</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Foto</th>
+                                <th>Producto</th>
+                                <th>Seccion</th>
+                                <th>Cant.</th>
+                                <th>Precio</th>
+                                <th>Total</th>
+                                <th>Ingresado</th>
+                                <th>Editado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expensesTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="modal-soft" id="detailModal">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 class="modal-title" id="modalTitle">Detalle</h3>
+                <button type="button" class="modal-close" id="modalCloseBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-outline-soft" id="modalCloseBtn2">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-soft" id="toastSoft"></div>
+    <script src="gastos.js"></script>
+</body>
+</html>

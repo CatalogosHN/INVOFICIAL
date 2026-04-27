@@ -6,7 +6,8 @@
         caex: 'mi_sistema_caex_shipments',
         salesEncuentro: 'mi_sistema_sales_encuentro',
         salesMoto: 'mi_sistema_sales_moto',
-        salesCaex: 'mi_sistema_sales_caex'
+        salesCaex: 'mi_sistema_sales_caex',
+        expenses: 'mi_sistema_expenses'
     };
 
     const TOKEN_LOCAL_KEY = 'webowneradmin_github_token_local';
@@ -196,7 +197,8 @@
             caex: readLocalArray(STORAGE_KEYS.caex),
             salesEncuentro: readLocalArray(STORAGE_KEYS.salesEncuentro),
             salesMoto: readLocalArray(STORAGE_KEYS.salesMoto),
-            salesCaex: readLocalArray(STORAGE_KEYS.salesCaex)
+            salesCaex: readLocalArray(STORAGE_KEYS.salesCaex),
+            expenses: readLocalArray(STORAGE_KEYS.expenses)
         };
     }
 
