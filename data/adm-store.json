@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "app": "WebOwnerAdmin",
+  "updatedAtISO": "2026-04-27T01:15:36.690Z",
+  "updatedAtText": "26/4/2026, 7:15:36 p. m.",
+  "items": [],
+  "rauda": [],
+  "clients": [],
+  "caex": [],
+  "salesEncuentro": [],
+  "salesMoto": [],
+  "salesCaex": [],
+  "expenses": [
+    {
+      "id": "expense_2c6b91b7-6960-4189-88a2-9badc6591f8a",
+      "type": "empresa",
+      "product": "bolsas frijoles",
+      "description": "",
+      "quantity": 3,
+      "unitPrice": 20,
+      "total": 60,
+      "photo": "",
+      "createdAt": "26/4/2026, 7:11:47 p. m.",
+      "createdAtISO": "2026-04-27T01:11:47.259Z",
+      "updatedAt": "",
+      "updatedAtISO": ""
+    }
+  ]
+}
