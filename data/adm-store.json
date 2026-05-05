@@ -1,8 +1,8 @@
 {
   "version": 1,
   "app": "WebOwnerAdmin",
-  "updatedAtISO": "2026-05-05T00:09:11.136Z",
-  "updatedAtText": "4/5/2026, 6:09:11 p. m.",
+  "updatedAtISO": "2026-05-05T00:24:22.393Z",
+  "updatedAtText": "4/5/2026, 6:24:22 p. m.",
   "items": [],
   "rauda": [],
   "clients": [],
@@ -11,6 +11,20 @@
   "salesMoto": [],
   "salesCaex": [],
   "expenses": [
+    {
+      "id": "expense_592ffc2f-74c3-42db-a25e-0cdbb33c9d63",
+      "type": "empresa",
+      "product": "TAPE TRANSPARENTE",
+      "description": "2 PULGADAS X 200 YARDAS",
+      "quantity": 24,
+      "unitPrice": 34.38,
+      "total": 825.1200000000001,
+      "photo": "",
+      "createdAt": "4/5/2026, 6:24:21 p. m.",
+      "createdAtISO": "2026-05-05T00:24:21.472Z",
+      "updatedAt": "",
+      "updatedAtISO": ""
+    },
     {
       "id": "expense_32cfa1ef-d210-4218-aefd-e50578bb8385",
       "type": "personal",
