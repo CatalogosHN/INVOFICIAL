@@ -1,8 +1,8 @@
 {
   "version": 1,
   "app": "WebOwnerAdmin",
-  "updatedAtISO": "2026-05-08T03:06:25.334Z",
-  "updatedAtText": "7/5/2026, 9:06:25 p. m.",
+  "updatedAtISO": "2026-05-08T03:06:50.768Z",
+  "updatedAtText": "7/5/2026, 9:06:50 p. m.",
   "items": [],
   "rauda": [],
   "clients": [],
@@ -28,16 +28,16 @@
     {
       "id": "expense_97a74b79-31cd-4cca-b4dd-a8d0d8595ef0",
       "type": "personal",
-      "product": "Gas",
-      "description": "Gasolina a roja r3",
+      "product": "Gasolina a roja R3",
+      "description": "Comprado 06/05/26",
       "quantity": 1,
       "unitPrice": 0,
       "total": 150,
       "photo": "",
       "createdAt": "7/5/2026, 9:03:44 p. m.",
       "createdAtISO": "2026-05-08T03:03:44.063Z",
-      "updatedAt": "",
-      "updatedAtISO": ""
+      "updatedAt": "7/5/2026, 9:06:49 p. m.",
+      "updatedAtISO": "2026-05-08T03:06:49.867Z"
     },
     {
       "id": "expense_93eba5c6-2510-41d7-8b05-ccc9b94bf265",
