@@ -1,8 +1,8 @@
 {
   "version": 1,
   "app": "WebOwnerAdmin",
-  "updatedAtISO": "2026-05-08T03:03:44.967Z",
-  "updatedAtText": "7/5/2026, 9:03:44 p. m.",
+  "updatedAtISO": "2026-05-08T03:04:46.470Z",
+  "updatedAtText": "7/5/2026, 9:04:46 p. m.",
   "items": [],
   "rauda": [],
   "clients": [],
@@ -11,6 +11,20 @@
   "salesMoto": [],
   "salesCaex": [],
   "expenses": [
+    {
+      "id": "expense_d66cc2b3-4b53-42db-9016-097cc56bf8bd",
+      "type": "personal",
+      "product": "Acondicionador pelo may",
+      "description": "",
+      "quantity": 3,
+      "unitPrice": 69,
+      "total": 207,
+      "photo": "",
+      "createdAt": "7/5/2026, 9:04:45 p. m.",
+      "createdAtISO": "2026-05-08T03:04:45.569Z",
+      "updatedAt": "",
+      "updatedAtISO": ""
+    },
     {
       "id": "expense_97a74b79-31cd-4cca-b4dd-a8d0d8595ef0",
       "type": "personal",
