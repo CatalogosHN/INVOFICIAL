@@ -1,8 +1,8 @@
 {
   "version": 1,
   "app": "WebOwnerAdmin",
-  "updatedAtISO": "2026-05-08T03:10:31.009Z",
-  "updatedAtText": "7/5/2026, 9:10:31 p. m.",
+  "updatedAtISO": "2026-05-08T03:10:51.366Z",
+  "updatedAtText": "7/5/2026, 9:10:51 p. m.",
   "items": [],
   "rauda": [],
   "clients": [],
@@ -15,15 +15,15 @@
       "id": "expense_ce36984b-46e9-4001-829c-03e8414196a7",
       "type": "personal",
       "product": "Cartones de 15 unids",
-      "description": "Comprado 07/05/26 pedidos ya",
+      "description": "Comprado 07/05/26 pedidos ya\nHuevos bonovo M carton",
       "quantity": 20,
       "unitPrice": 51,
       "total": 1020,
       "photo": "",
       "createdAt": "7/5/2026, 9:10:30 p. m.",
       "createdAtISO": "2026-05-08T03:10:30.106Z",
-      "updatedAt": "",
-      "updatedAtISO": ""
+      "updatedAt": "7/5/2026, 9:10:50 p. m.",
+      "updatedAtISO": "2026-05-08T03:10:50.465Z"
     },
     {
       "id": "expense_d66cc2b3-4b53-42db-9016-097cc56bf8bd",
