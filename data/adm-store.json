@@ -1,8 +1,8 @@
 {
   "version": 1,
   "app": "WebOwnerAdmin",
-  "updatedAtISO": "2026-05-10T22:53:45.249Z",
-  "updatedAtText": "10/5/2026, 4:53:45 p. m.",
+  "updatedAtISO": "2026-05-11T04:17:16.185Z",
+  "updatedAtText": "10/5/2026, 10:17:16 p. m.",
   "items": [],
   "rauda": [],
   "clients": [],
@@ -11,6 +11,20 @@
   "salesMoto": [],
   "salesCaex": [],
   "expenses": [
+    {
+      "id": "expense_907a60a8-905f-47d7-8191-629495e60981",
+      "type": "personal",
+      "product": "COCOBALEADAS",
+      "description": "5 BALEADAS CON HUEVO",
+      "quantity": 1,
+      "unitPrice": 0,
+      "total": 140,
+      "photo": "",
+      "createdAt": "10/5/2026, 10:17:15 p. m.",
+      "createdAtISO": "2026-05-11T04:17:15.279Z",
+      "updatedAt": "",
+      "updatedAtISO": ""
+    },
     {
       "id": "expense_c62e8ec4-f581-4689-a925-0d6a550d5d94",
       "type": "personal",
