@@ -1,8 +1,8 @@
 {
   "version": 1,
   "app": "WebOwnerAdmin",
-  "updatedAtISO": "2026-05-11T04:17:16.185Z",
-  "updatedAtText": "10/5/2026, 10:17:16 p. m.",
+  "updatedAtISO": "2026-05-11T04:18:49.481Z",
+  "updatedAtText": "10/5/2026, 10:18:49 p. m.",
   "items": [],
   "rauda": [],
   "clients": [],
@@ -11,6 +11,20 @@
   "salesMoto": [],
   "salesCaex": [],
   "expenses": [
+    {
+      "id": "expense_9e0bf0e8-45ef-4039-aa72-22b6517d1bb4",
+      "type": "personal",
+      "product": "DIPROVA",
+      "description": "2LB CHILES PIMIENTO - 52\n45 HUEVOS - 150\n4LB AGUACATES - 206\n5LB TOMATE - 107.5",
+      "quantity": 1,
+      "unitPrice": 0,
+      "total": 535.9,
+      "photo": "",
+      "createdAt": "10/5/2026, 10:18:48 p. m.",
+      "createdAtISO": "2026-05-11T04:18:48.578Z",
+      "updatedAt": "",
+      "updatedAtISO": ""
+    },
     {
       "id": "expense_907a60a8-905f-47d7-8191-629495e60981",
       "type": "personal",
