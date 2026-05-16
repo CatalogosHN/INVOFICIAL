@@ -1,8 +1,10 @@
 {
   "version": 2,
   "app": "WebOwnerAdmin",
-  "updatedAtISO": "2026-05-16T21:29:28.682246Z",
-  "updatedAtText": "16/05/2026, 03:29:28 PM",
+  "schema": "WebOwnerAdmin.v2",
+  "schemaNote": "recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato.",
+  "updatedAtISO": "2026-05-16T21:41:49.123Z",
+  "updatedAtText": "16/5/2026, 3:41:49 p. m.",
   "items": [
     {
       "id": "item_a823c672-e260-48f7-a6e0-9ac00032956a",
@@ -125,14 +127,14 @@
       "unitPrice": 69,
       "total": 207,
       "photo": "",
+      "recordDate": "2026-05-06",
+      "recordDateText": "6/5/2026",
+      "receivedAt": "7/5/2026, 9:04:45 p. m.",
+      "receivedAtISO": "2026-05-08T03:04:45.569Z",
       "createdAt": "7/5/2026, 9:04:45 p. m.",
       "createdAtISO": "2026-05-08T03:04:45.569Z",
-      "updatedAt": "7/5/2026, 9:06:24 p. m.",
-      "updatedAtISO": "2026-05-08T03:06:24.427Z",
-      "recordDate": "2026-05-07",
-      "recordDateText": "7/5/2026",
-      "receivedAt": "7/5/2026, 9:04:45 p. m.",
-      "receivedAtISO": "2026-05-08T03:04:45.569Z"
+      "updatedAt": "16/5/2026, 3:41:48 p. m.",
+      "updatedAtISO": "2026-05-16T21:41:48.222Z"
     },
     {
       "id": "expense_97a74b79-31cd-4cca-b4dd-a8d0d8595ef0",
@@ -224,7 +226,5 @@
       "receivedAt": "26/4/2026, 7:11:47 p. m.",
       "receivedAtISO": "2026-04-27T01:11:47.259Z"
     }
-  ],
-  "schema": "WebOwnerAdmin.v2",
-  "schemaNote": "recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato."
+  ]
 }
