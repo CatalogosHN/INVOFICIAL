@@ -318,7 +318,10 @@
                 ? `<img src="${expense.photo}" class="thumb-mini" alt="Foto de ${escapeHtml(expense.product)}">`
                 : '<span class="empty-thumb"><i class="fas fa-image"></i></span>';
             const unit = Number(expense.unitPrice || 0) > 0 ? formatMoney(expense.unitPrice) : '<span class="pill pill-warning">Manual</span>';
-            const edited = expense.updatedAtISO ? formatDate(expense.updatedAtISO) : '<span class="muted-line">Sin edicion</span>';
+            const editCount = Number(expense.editCount || (expense.updatedAtISO ? 1 : 0));
+            const edited = expense.updatedAtISO
+                ? `${formatDate(expense.updatedAtISO)}<div class="mt-1"><span class="pill pill-warning">Editado${editCount > 1 ? ' x' + editCount : ''}</span></div>`
+                : '<span class="muted-line">Sin edición</span>';
 
             return `
                 <tr>
@@ -408,7 +411,11 @@
             createdAt: existing ? (existing.createdAt || dateMeta.createdAt) : dateMeta.createdAt,
             createdAtISO: existing ? (existing.createdAtISO || dateMeta.createdAtISO) : dateMeta.createdAtISO,
             updatedAt: existing ? nowText() : '',
-            updatedAtISO: existing ? nowIso() : ''
+            updatedAtISO: existing ? nowIso() : '',
+            editCount: existing ? Number(existing.editCount || 0) + 1 : 0,
+            editHistory: existing
+                ? (Array.isArray(existing.editHistory) ? existing.editHistory : []).concat([{ at: nowText(), atISO: nowIso(), action: 'Gasto editado' }])
+                : []
         };
 
         const next = existing
@@ -472,7 +479,8 @@
                 <div class="detail-row"><span class="detail-label">Total gastado</span><div>${formatMoney(expense.total)}</div></div>
                 <div class="detail-row"><span class="detail-label">Fecha real del gasto</span><div>${escapeHtml(getRecordDateText(expense))}</div></div>
                 <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(expense))}</div></div>
-                <div class="detail-row"><span class="detail-label">Ultima fecha de edicion</span><div>${expense.updatedAtISO ? formatDate(expense.updatedAtISO) : 'Sin edicion'}</div></div>
+                <div class="detail-row"><span class="detail-label">Última fecha de edición</span><div>${expense.updatedAtISO ? formatDate(expense.updatedAtISO) : 'Sin edición'}</div></div>
+                <div class="detail-row"><span class="detail-label">Cantidad de ediciones</span><div>${Number(expense.editCount || (expense.updatedAtISO ? 1 : 0))}</div></div>
             </div>
         `;
         nodes.detailModal.classList.add('show');

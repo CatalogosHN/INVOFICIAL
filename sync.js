@@ -229,7 +229,7 @@ function readLocalArray(key) {
             version: 2,
             app: 'WebOwnerAdmin',
             schema: 'WebOwnerAdmin.v2',
-            schemaNote: 'recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato.',
+            schemaNote: 'recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato; updatedAt/editCount/editHistory identifican ediciones.',
             updatedAtISO: new Date().toISOString(),
             updatedAtText: formatNowText(),
             items: readLocalArray(STORAGE_KEYS.items),

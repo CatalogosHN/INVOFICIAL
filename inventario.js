@@ -9,9 +9,50 @@
         };
 
         let tempCaexLineItems = [];
+        const editState = {
+            items: null,
+            rauda: null,
+            client: null,
+            caex: null,
+            encuentro: null,
+            moto: null,
+            ventaCaex: null
+        };
+        const uploadRemoveFlags = {
+            itemsPhoto: false,
+            raudaPhoto: false,
+            caexReceipt: false
+        };
+
+        function isMobileView() {
+            return window.innerWidth <= 991;
+        }
+
+        function setFabState() {
+            const fab = document.getElementById('mobileMenuFab');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (!fab || !sidebar || !backdrop) return;
+            const open = sidebar.classList.contains('active');
+            fab.classList.toggle('is-open', open);
+            fab.innerHTML = `<i class="fas ${open ? 'fa-times' : 'fa-bars'}"></i>`;
+            backdrop.classList.toggle('show', open && isMobileView());
+            document.body.classList.toggle('menu-open', open && isMobileView());
+        }
+
+        function openMenu() {
+            document.getElementById('sidebar').classList.add('active');
+            setFabState();
+        }
+
+        function closeMenu() {
+            document.getElementById('sidebar').classList.remove('active');
+            setFabState();
+        }
 
         function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('active');
+            setFabState();
         }
 
         function sortRecordsByDate(list) {
@@ -109,6 +150,159 @@
             };
         }
 
+
+        function formatDateInput(value) {
+            const parsed = parseLocalDate(value);
+            if (!parsed) return todayDateValue();
+            const local = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
+            return local.toISOString().slice(0, 10);
+        }
+
+        function makePersistedMeta(existing, recordDateValue, editLabel = 'Registro editado') {
+            const dateMeta = makeDateMeta(recordDateValue);
+            if (!existing) return dateMeta;
+            const editedAt = nowText();
+            const editedAtISO = nowIso();
+            const previousHistory = Array.isArray(existing.editHistory) ? existing.editHistory : [];
+            return {
+                recordDate: dateMeta.recordDate,
+                recordDateText: dateMeta.recordDateText,
+                receivedAt: existing.receivedAt || existing.createdAt || dateMeta.receivedAt,
+                receivedAtISO: existing.receivedAtISO || existing.createdAtISO || dateMeta.receivedAtISO,
+                createdAt: existing.createdAt || existing.receivedAt || dateMeta.createdAt,
+                createdAtISO: existing.createdAtISO || existing.receivedAtISO || dateMeta.createdAtISO,
+                updatedAt: editedAt,
+                updatedAtISO: editedAtISO,
+                editCount: Number(existing.editCount || 0) + 1,
+                editHistory: previousHistory.concat([{ at: editedAt, atISO: editedAtISO, action: editLabel }])
+            };
+        }
+
+        function editBadge(record) {
+            if (!record || !record.updatedAt) return '';
+            const count = Number(record.editCount || 1);
+            return `<div class="mt-1"><span class="pill pill-warning">Editado${count > 1 ? ' x' + count : ''}</span></div>`;
+        }
+
+        function renderAuditRows(record) {
+            if (!record || !record.updatedAt) {
+                return '<div class="detail-row"><span class="detail-label">Ediciones</span><div>Sin ediciones</div></div>';
+            }
+            const count = Number(record.editCount || 1);
+            return `
+                <div class="detail-row"><span class="detail-label">Última edición</span><div>${escapeHtml(record.updatedAt)}</div></div>
+                <div class="detail-row"><span class="detail-label">Cantidad de ediciones</span><div>${count}</div></div>
+            `;
+        }
+
+        function setSubmitButtonText(formId, text) {
+            const form = document.getElementById(formId);
+            const button = form ? form.querySelector('button[type="submit"]') : null;
+            if (button) button.innerHTML = text;
+        }
+
+        function ensureCancelButton(formId, sectionKey) {
+            const form = document.getElementById(formId);
+            if (!form || document.getElementById(`${formId}CancelEdit`)) return;
+            const submit = form.querySelector('button[type="submit"]');
+            if (!submit) return;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.id = `${formId}CancelEdit`;
+            btn.className = 'btn btn-outline-soft btn-block mt-2';
+            btn.style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-times mr-1"></i>Cancelar edición';
+            btn.addEventListener('click', () => cancelEdit(sectionKey));
+            submit.insertAdjacentElement('afterend', btn);
+        }
+
+        function setCancelVisible(formId, visible) {
+            const btn = document.getElementById(`${formId}CancelEdit`);
+            if (btn) btn.style.display = visible ? 'block' : 'none';
+        }
+
+        function scrollToSection(id) {
+            const section = document.getElementById(id);
+            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (isMobileView()) closeMenu();
+        }
+
+        function resetItemsForm() {
+            document.getElementById('itemsForm').reset();
+            clearUploadSelection('itemsPhoto', false);
+            editState.items = null;
+            setSubmitButtonText('itemsForm', 'Guardar en Items');
+            setCancelVisible('itemsForm', false);
+            applyDefaultRecordDates();
+        }
+
+        function resetRaudaForm() {
+            document.getElementById('raudaForm').reset();
+            clearUploadSelection('raudaPhoto', false);
+            editState.rauda = null;
+            setSubmitButtonText('raudaForm', 'Guardar en Rauda');
+            setCancelVisible('raudaForm', false);
+            applyDefaultRecordDates();
+        }
+
+        function resetClientForm() {
+            document.getElementById('clientsForm').reset();
+            editState.client = null;
+            setSubmitButtonText('clientsForm', 'Guardar cliente');
+            setCancelVisible('clientsForm', false);
+            applyDefaultRecordDates();
+        }
+
+        function resetCaexForm() {
+            document.getElementById('caexForm').reset();
+            clearUploadSelection('caexReceipt', false);
+            editState.caex = null;
+            document.getElementById('caexModeExisting').checked = true;
+            updateCaexMode();
+            setSubmitButtonText('caexForm', 'Guardar envío CAEX');
+            setCancelVisible('caexForm', false);
+            applyDefaultRecordDates();
+        }
+
+        function resetEncuentroForm() {
+            document.getElementById('encuentroForm').reset();
+            editState.encuentro = null;
+            setSubmitButtonText('encuentroForm', 'Guardar venta Encuentro');
+            setCancelVisible('encuentroForm', false);
+            applyDefaultRecordDates();
+        }
+
+        function resetMotoForm() {
+            document.getElementById('motoForm').reset();
+            editState.moto = null;
+            setSubmitButtonText('motoForm', 'Guardar venta Moto');
+            setCancelVisible('motoForm', false);
+            applyDefaultRecordDates();
+        }
+
+        function resetVentaCaexForm() {
+            document.getElementById('ventaCaexForm').reset();
+            editState.ventaCaex = null;
+            tempCaexLineItems = [];
+            updatePaymentMode();
+            renderTempLineItems();
+            setSubmitButtonText('ventaCaexForm', 'Guardar venta CAEX');
+            setCancelVisible('ventaCaexForm', false);
+            applyDefaultRecordDates();
+            renderVentaCaexClientInfo();
+        }
+
+        function cancelEdit(sectionKey) {
+            if (sectionKey === 'items') resetItemsForm();
+            if (sectionKey === 'rauda') resetRaudaForm();
+            if (sectionKey === 'client') resetClientForm();
+            if (sectionKey === 'caex') resetCaexForm();
+            if (sectionKey === 'encuentro') resetEncuentroForm();
+            if (sectionKey === 'moto') resetMotoForm();
+            if (sectionKey === 'ventaCaex') resetVentaCaexForm();
+            showToast('Edición cancelada.');
+        }
+
         function applyDefaultRecordDates() {
             [
                 'itemsRecordDate',
@@ -157,6 +351,8 @@
         }
 
         function openUploadPicker(inputId) {
+            const mainId = String(inputId || '').replace('Camera', '');
+            if (mainId) window.__lastFocusedUploader = mainId;
             const input = document.getElementById(inputId);
             if (input) input.click();
         }
@@ -212,7 +408,10 @@
             }
         }
 
-        function clearUploadSelection(mainInputId) {
+        function clearUploadSelection(mainInputId, markRemoved = true) {
+            if (Object.prototype.hasOwnProperty.call(uploadRemoveFlags, mainInputId)) {
+                uploadRemoveFlags[mainInputId] = Boolean(markRemoved);
+            }
             const mainInput = document.getElementById(mainInputId);
             const cameraInput = document.getElementById(mainInputId + 'Camera');
             if (mainInput) mainInput.value = '';
@@ -220,10 +419,44 @@
             updateUploadPreview(mainInputId, null);
         }
 
+        function clearUpload(mainInputId) {
+            clearUploadSelection(mainInputId, true);
+        }
+
+        function showExistingUploadPreview(mainInputId, source, label = 'Archivo actual') {
+            if (Object.prototype.hasOwnProperty.call(uploadRemoveFlags, mainInputId)) {
+                uploadRemoveFlags[mainInputId] = false;
+            }
+            const preview = document.getElementById(mainInputId + 'Preview');
+            const img = document.getElementById(mainInputId + 'PreviewImg');
+            const icon = document.getElementById(mainInputId + 'PreviewIcon');
+            const name = document.getElementById(mainInputId + 'PreviewName');
+            if (!preview || !img || !icon || !name) return;
+            if (!source) {
+                clearUploadSelection(mainInputId, false);
+                return;
+            }
+            preview.classList.add('show');
+            name.textContent = label;
+            if (/^data:image\//.test(source) || /\.(png|jpe?g|webp|gif)$/i.test(source)) {
+                img.src = source;
+                img.style.display = 'block';
+                icon.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                img.removeAttribute('src');
+                icon.innerHTML = '<i class="fas fa-file"></i>';
+                icon.style.display = 'inline-flex';
+            }
+        }
+
         function handleSmartUploadFile(mainInputId, file, fromPaste = false) {
             if (!file) return;
             const mainInput = document.getElementById(mainInputId);
             if (!mainInput) return;
+            if (Object.prototype.hasOwnProperty.call(uploadRemoveFlags, mainInputId)) {
+                uploadRemoveFlags[mainInputId] = false;
+            }
             setInputFile(mainInput, file);
             updateUploadPreview(mainInputId, file);
             if (fromPaste) {
@@ -242,11 +475,16 @@
             const acceptedPaste = options.acceptedPaste || 'image';
 
             zone.addEventListener('click', () => {
+                window.__lastFocusedUploader = mainInputId;
                 zone.focus();
                 wrapper.classList.add('is-focus');
+                openUploadPicker(mainInputId);
             });
 
-            zone.addEventListener('focus', () => wrapper.classList.add('is-focus'));
+            zone.addEventListener('focus', () => {
+                window.__lastFocusedUploader = mainInputId;
+                wrapper.classList.add('is-focus');
+            });
             zone.addEventListener('blur', () => wrapper.classList.remove('is-focus'));
 
             zone.addEventListener('dragover', event => {
@@ -342,7 +580,7 @@
             `;
         }
 
-        function renderInventoryTables() {
+                function renderInventoryTables() {
             const items = readStore(STORAGE_KEYS.items);
             const rauda = readStore(STORAGE_KEYS.rauda);
 
@@ -355,16 +593,17 @@
                     return `
                         <tr>
                             <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
-                            <td><strong>${escapeHtml(item.name)}</strong></td>
+                            <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}</td>
                             <td>${Number(item.stock || 0)}</td>
                             <td>${formatMoney(item.cost)}</td>
                             <td>${Number(item.minStock || 0)}</td>
                             <td>${escapeHtml(getRecordDateText(item))}</td>
-                            <td>${escapeHtml(getCaptureText(item))}</td>
+                            <td>${escapeHtml(getCaptureText(item))}${editBadge(item)}</td>
                             <td><span class="pill ${low ? 'pill-warning' : 'pill-success'}">${low ? 'Stock bajo' : 'Disponible'}</span></td>
                             <td>
                                 <div class="actions-inline">
                                     <button class="btn btn-info-soft btn-sm" onclick="viewInventoryRecord('items','${item.id}')">Ver</button>
+                                    <button class="btn btn-success-soft btn-sm" onclick="editInventoryRecord('items','${item.id}')">Editar</button>
                                     <button class="btn btn-danger-soft btn-sm" onclick="deleteInventoryRecord('items','${item.id}')">Eliminar</button>
                                 </div>
                             </td>
@@ -380,14 +619,15 @@
                 raudaBody.innerHTML = rauda.map(item => `
                     <tr>
                         <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
-                        <td><strong>${escapeHtml(item.name)}</strong></td>
+                        <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}</td>
                         <td>${Number(item.stock || 0)}</td>
                         <td>${formatMoney(item.cost)}</td>
                         <td>${escapeHtml(getRecordDateText(item))}</td>
-                        <td>${escapeHtml(getCaptureText(item))}</td>
+                        <td>${escapeHtml(getCaptureText(item))}${editBadge(item)}</td>
                         <td>
                             <div class="actions-inline">
                                 <button class="btn btn-info-soft btn-sm" onclick="viewInventoryRecord('rauda','${item.id}')">Ver</button>
+                                <button class="btn btn-success-soft btn-sm" onclick="editInventoryRecord('rauda','${item.id}')">Editar</button>
                                 <button class="btn btn-danger-soft btn-sm" onclick="deleteInventoryRecord('rauda','${item.id}')">Eliminar</button>
                             </div>
                         </td>
@@ -396,7 +636,7 @@
             }
         }
 
-        function renderClientsTable() {
+                function renderClientsTable() {
             const clients = readStore(STORAGE_KEYS.clients);
             const body = document.getElementById('clientsTableBody');
 
@@ -407,7 +647,7 @@
 
             body.innerHTML = clients.map(client => `
                 <tr>
-                    <td><strong>${escapeHtml(client.name)}</strong></td>
+                    <td><strong>${escapeHtml(client.name)}</strong>${editBadge(client)}</td>
                     <td>
                         <div class="phone-tags">
                             ${(client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join('') || '<span class="pill pill-info">Sin teléfono</span>'}
@@ -416,10 +656,11 @@
                     <td>${escapeHtml(client.department || '-')}</td>
                     <td>${escapeHtml(client.town || '-')}</td>
                     <td>${escapeHtml(getRecordDateText(client))}</td>
-                    <td>${escapeHtml(getCaptureText(client))}</td>
+                    <td>${escapeHtml(getCaptureText(client))}${editBadge(client)}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewClientRecord('${client.id}')">Ver</button>
+                            <button class="btn btn-success-soft btn-sm" onclick="editClientRecord('${client.id}')">Editar</button>
                             <button class="btn btn-danger-soft btn-sm" onclick="deleteClientRecord('${client.id}')">Eliminar</button>
                         </div>
                     </td>
@@ -452,7 +693,7 @@
             }
         }
 
-        function renderCaexTable() {
+                function renderCaexTable() {
             const records = readStore(STORAGE_KEYS.caex);
             const body = document.getElementById('caexTableBody');
 
@@ -463,7 +704,7 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.client.name)}</strong></td>
+                    <td><strong>${escapeHtml(record.client.name)}</strong>${editBadge(record)}</td>
                     <td>
                         <div class="phone-tags">
                             ${(record.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join('') || '<span class="pill pill-info">Sin teléfono</span>'}
@@ -473,10 +714,11 @@
                     <td>${escapeHtml(record.client.town || '-')}</td>
                     <td>${record.receipt ? `<button class="btn btn-info-soft btn-sm" onclick="viewCaexReceipt('${record.id}')">Ver</button>` : '<span class="pill pill-info">Sin archivo</span>'}</td>
                     <td>${escapeHtml(getRecordDateText(record))}</td>
-                    <td>${escapeHtml(getCaptureText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}${editBadge(record)}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewCaexRecord('${record.id}')">Ver</button>
+                            <button class="btn btn-success-soft btn-sm" onclick="editCaexRecord('${record.id}')">Editar</button>
                             <button class="btn btn-danger-soft btn-sm" onclick="deleteCaexRecord('${record.id}')">Eliminar</button>
                         </div>
                     </td>
@@ -484,7 +726,7 @@
             `).join('');
         }
 
-        function renderEncuentroTable() {
+                function renderEncuentroTable() {
             const records = readStore(STORAGE_KEYS.salesEncuentro);
             const body = document.getElementById('encuentroTableBody');
 
@@ -495,15 +737,16 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.product)}</strong></td>
+                    <td><strong>${escapeHtml(record.product)}</strong>${editBadge(record)}</td>
                     <td>${escapeHtml(record.time)}</td>
                     <td>${escapeHtml(record.phone)}</td>
                     <td>${formatMoney(record.total)}</td>
                     <td>${escapeHtml(getRecordDateText(record))}</td>
-                    <td>${escapeHtml(getCaptureText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}${editBadge(record)}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewSimpleSale('encuentro','${record.id}')">Ver</button>
+                            <button class="btn btn-success-soft btn-sm" onclick="editSimpleSale('encuentro','${record.id}')">Editar</button>
                             <button class="btn btn-danger-soft btn-sm" onclick="deleteSimpleSale('encuentro','${record.id}')">Eliminar</button>
                         </div>
                     </td>
@@ -511,7 +754,7 @@
             `).join('');
         }
 
-        function renderMotoTable() {
+                function renderMotoTable() {
             const records = readStore(STORAGE_KEYS.salesMoto);
             const body = document.getElementById('motoTableBody');
 
@@ -522,16 +765,17 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.product)}</strong></td>
+                    <td><strong>${escapeHtml(record.product)}</strong>${editBadge(record)}</td>
                     <td>${escapeHtml(record.address)}</td>
                     <td>${escapeHtml(record.time)}</td>
                     <td>${escapeHtml(record.phone)}</td>
                     <td>${formatMoney(record.total)}</td>
                     <td>${escapeHtml(getRecordDateText(record))}</td>
-                    <td>${escapeHtml(getCaptureText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}${editBadge(record)}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewSimpleSale('moto','${record.id}')">Ver</button>
+                            <button class="btn btn-success-soft btn-sm" onclick="editSimpleSale('moto','${record.id}')">Editar</button>
                             <button class="btn btn-danger-soft btn-sm" onclick="deleteSimpleSale('moto','${record.id}')">Eliminar</button>
                         </div>
                     </td>
@@ -606,7 +850,7 @@
             `).join('');
         }
 
-        function renderVentaCaexTable() {
+                function renderVentaCaexTable() {
             const records = readStore(STORAGE_KEYS.salesCaex);
             const body = document.getElementById('ventaCaexTableBody');
 
@@ -617,14 +861,15 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.client.name)}</strong></td>
+                    <td><strong>${escapeHtml(record.client.name)}</strong>${editBadge(record)}</td>
                     <td>${record.items.map(item => `${escapeHtml(item.productName)} (${Number(item.units)})`).join('<br>')}</td>
                     <td>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</td>
                     <td>${escapeHtml(getRecordDateText(record))}</td>
-                    <td>${escapeHtml(getCaptureText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}${editBadge(record)}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewVentaCaexRecord('${record.id}')">Ver</button>
+                            <button class="btn btn-success-soft btn-sm" onclick="editVentaCaexRecord('${record.id}')">Editar</button>
                             <button class="btn btn-danger-soft btn-sm" onclick="deleteVentaCaexRecord('${record.id}')">Eliminar</button>
                         </div>
                     </td>
@@ -649,50 +894,53 @@
         async function handleItemsFormSubmit(event) {
             event.preventDefault();
             const items = readStore(STORAGE_KEYS.items);
-            const dateMeta = makeDateMeta(document.getElementById('itemsRecordDate').value);
-            items.push({
-                id: generateId('item'),
+            const existing = editState.items ? items.find(item => item.id === editState.items) : null;
+            const dateMeta = makePersistedMeta(existing, document.getElementById('itemsRecordDate').value, 'Producto Items editado');
+            const newPhoto = await fileToDataUrl(document.getElementById('itemsPhoto').files[0]);
+            const payload = {
+                id: existing ? existing.id : generateId('item'),
                 name: document.getElementById('itemsName').value.trim(),
                 stock: Number(document.getElementById('itemsStock').value),
                 cost: Number(document.getElementById('itemsCost').value),
                 minStock: Number(document.getElementById('itemsMin').value),
-                photo: await fileToDataUrl(document.getElementById('itemsPhoto').files[0]),
+                photo: newPhoto || (uploadRemoveFlags.itemsPhoto ? '' : existing?.photo || ''),
                 ...dateMeta
-            });
-            saveStore(STORAGE_KEYS.items, items);
-            event.target.reset();
-            clearUploadSelection('itemsPhoto');
-            applyDefaultRecordDates();
+            };
+            const next = existing ? items.map(item => item.id === existing.id ? payload : item) : items.concat(payload);
+            saveStore(STORAGE_KEYS.items, next);
+            resetItemsForm();
             refreshEverything();
-            showToast('Producto guardado en Items.');
+            showToast(existing ? 'Producto Items actualizado.' : 'Producto guardado en Items.');
         }
 
         async function handleRaudaFormSubmit(event) {
             event.preventDefault();
             const rauda = readStore(STORAGE_KEYS.rauda);
-            const dateMeta = makeDateMeta(document.getElementById('raudaRecordDate').value);
-            rauda.push({
-                id: generateId('rauda'),
+            const existing = editState.rauda ? rauda.find(item => item.id === editState.rauda) : null;
+            const dateMeta = makePersistedMeta(existing, document.getElementById('raudaRecordDate').value, 'Producto Rauda editado');
+            const newPhoto = await fileToDataUrl(document.getElementById('raudaPhoto').files[0]);
+            const payload = {
+                id: existing ? existing.id : generateId('rauda'),
                 name: document.getElementById('raudaName').value.trim(),
                 stock: Number(document.getElementById('raudaStock').value),
                 cost: Number(document.getElementById('raudaCost').value),
-                photo: await fileToDataUrl(document.getElementById('raudaPhoto').files[0]),
+                photo: newPhoto || (uploadRemoveFlags.raudaPhoto ? '' : existing?.photo || ''),
                 ...dateMeta
-            });
-            saveStore(STORAGE_KEYS.rauda, rauda);
-            event.target.reset();
-            clearUploadSelection('raudaPhoto');
-            applyDefaultRecordDates();
+            };
+            const next = existing ? rauda.map(item => item.id === existing.id ? payload : item) : rauda.concat(payload);
+            saveStore(STORAGE_KEYS.rauda, next);
+            resetRaudaForm();
             refreshEverything();
-            showToast('Producto guardado en Rauda.');
+            showToast(existing ? 'Producto Rauda actualizado.' : 'Producto guardado en Rauda.');
         }
 
-        function handleClientsFormSubmit(event) {
+                function handleClientsFormSubmit(event) {
             event.preventDefault();
             const clients = readStore(STORAGE_KEYS.clients);
-            const dateMeta = makeDateMeta(document.getElementById('clientRecordDate').value);
-            clients.push({
-                id: generateId('client'),
+            const existing = editState.client ? clients.find(client => client.id === editState.client) : null;
+            const dateMeta = makePersistedMeta(existing, document.getElementById('clientRecordDate').value, 'Cliente editado');
+            const payload = {
+                id: existing ? existing.id : generateId('client'),
                 name: document.getElementById('clientName').value.trim(),
                 department: document.getElementById('clientDepartment').value.trim(),
                 town: document.getElementById('clientTown').value.trim(),
@@ -702,12 +950,13 @@
                     document.getElementById('clientPhone3').value
                 ),
                 ...dateMeta
-            });
-            saveStore(STORAGE_KEYS.clients, clients);
-            event.target.reset();
-            applyDefaultRecordDates();
+            };
+            const next = existing ? clients.map(client => client.id === existing.id ? payload : client) : clients.concat(payload);
+            saveStore(STORAGE_KEYS.clients, next);
+            if (existing) propagateClientUpdate(payload);
+            resetClientForm();
             refreshEverything();
-            showToast('Cliente guardado correctamente.');
+            showToast(existing ? 'Cliente actualizado.' : 'Cliente guardado correctamente.');
         }
 
         async function handleCaexFormSubmit(event) {
@@ -716,7 +965,8 @@
             const mode = document.querySelector('input[name="caexMode"]:checked').value;
             const clients = readStore(STORAGE_KEYS.clients);
             const caexRecords = readStore(STORAGE_KEYS.caex);
-            const shipmentDateMeta = makeDateMeta(document.getElementById('caexRecordDate').value);
+            const existing = editState.caex ? caexRecords.find(record => record.id === editState.caex) : null;
+            const shipmentDateMeta = makePersistedMeta(existing, document.getElementById('caexRecordDate').value, 'Envío CAEX editado');
             let clientData = null;
 
             if (mode === 'existing') {
@@ -741,9 +991,10 @@
                     return;
                 }
 
-                const clientDateMeta = makeDateMeta(document.getElementById('caexRecordDate').value);
+                const existingClient = existing?.client?.id ? clients.find(client => client.id === existing.client.id) : null;
+                const clientDateMeta = makePersistedMeta(existingClient, document.getElementById('caexRecordDate').value, 'Cliente editado desde CAEX');
                 clientData = {
-                    id: generateId('client'),
+                    id: existingClient ? existingClient.id : generateId('client'),
                     name,
                     department,
                     town,
@@ -751,12 +1002,17 @@
                     ...clientDateMeta
                 };
 
-                clients.push(clientData);
-                saveStore(STORAGE_KEYS.clients, clients);
+                if (existingClient) {
+                    saveStore(STORAGE_KEYS.clients, clients.map(client => client.id === existingClient.id ? clientData : client));
+                } else {
+                    clients.push(clientData);
+                    saveStore(STORAGE_KEYS.clients, clients);
+                }
             }
 
-            caexRecords.push({
-                id: generateId('caex'),
+            const newReceipt = await fileToDataUrl(document.getElementById('caexReceipt').files[0]);
+            const payload = {
+                id: existing ? existing.id : generateId('caex'),
                 client: {
                     id: clientData.id,
                     name: clientData.name,
@@ -764,57 +1020,56 @@
                     town: clientData.town,
                     phones: [...(clientData.phones || [])]
                 },
-                receipt: await fileToDataUrl(document.getElementById('caexReceipt').files[0]),
+                receipt: newReceipt || (uploadRemoveFlags.caexReceipt ? '' : existing?.receipt || ''),
                 ...shipmentDateMeta
-            });
+            };
 
-            saveStore(STORAGE_KEYS.caex, caexRecords);
-            event.target.reset();
-            clearUploadSelection('caexReceipt');
-            document.getElementById('caexModeExisting').checked = true;
-            updateCaexMode();
-            applyDefaultRecordDates();
+            const next = existing ? caexRecords.map(record => record.id === existing.id ? payload : record) : caexRecords.concat(payload);
+            saveStore(STORAGE_KEYS.caex, next);
+            resetCaexForm();
             refreshEverything();
-            showToast('Envío CAEX guardado correctamente.');
+            showToast(existing ? 'Envío CAEX actualizado.' : 'Envío CAEX guardado correctamente.');
         }
 
-        function handleEncuentroSubmit(event) {
+                function handleEncuentroSubmit(event) {
             event.preventDefault();
             const records = readStore(STORAGE_KEYS.salesEncuentro);
-            const dateMeta = makeDateMeta(document.getElementById('encuentroRecordDate').value);
-            records.push({
-                id: generateId('encuentro'),
+            const existing = editState.encuentro ? records.find(record => record.id === editState.encuentro) : null;
+            const dateMeta = makePersistedMeta(existing, document.getElementById('encuentroRecordDate').value, 'Venta encuentro editada');
+            const payload = {
+                id: existing ? existing.id : generateId('encuentro'),
                 product: document.getElementById('encuentroProduct').value.trim(),
                 time: document.getElementById('encuentroTime').value.trim(),
                 phone: document.getElementById('encuentroPhone').value.trim(),
                 total: Number(document.getElementById('encuentroTotal').value),
                 ...dateMeta
-            });
-            saveStore(STORAGE_KEYS.salesEncuentro, records);
-            event.target.reset();
-            applyDefaultRecordDates();
+            };
+            const next = existing ? records.map(record => record.id === existing.id ? payload : record) : records.concat(payload);
+            saveStore(STORAGE_KEYS.salesEncuentro, next);
+            resetEncuentroForm();
             refreshEverything();
-            showToast('Venta de encuentro guardada.');
+            showToast(existing ? 'Venta de encuentro actualizada.' : 'Venta de encuentro guardada.');
         }
 
-        function handleMotoSubmit(event) {
+                function handleMotoSubmit(event) {
             event.preventDefault();
             const records = readStore(STORAGE_KEYS.salesMoto);
-            const dateMeta = makeDateMeta(document.getElementById('motoRecordDate').value);
-            records.push({
-                id: generateId('moto'),
+            const existing = editState.moto ? records.find(record => record.id === editState.moto) : null;
+            const dateMeta = makePersistedMeta(existing, document.getElementById('motoRecordDate').value, 'Venta moto editada');
+            const payload = {
+                id: existing ? existing.id : generateId('moto'),
                 product: document.getElementById('motoProduct').value.trim(),
                 address: document.getElementById('motoAddress').value.trim(),
                 time: document.getElementById('motoTime').value.trim(),
                 phone: document.getElementById('motoPhone').value.trim(),
                 total: Number(document.getElementById('motoTotal').value),
                 ...dateMeta
-            });
-            saveStore(STORAGE_KEYS.salesMoto, records);
-            event.target.reset();
-            applyDefaultRecordDates();
+            };
+            const next = existing ? records.map(record => record.id === existing.id ? payload : record) : records.concat(payload);
+            saveStore(STORAGE_KEYS.salesMoto, next);
+            resetMotoForm();
             refreshEverything();
-            showToast('Venta de moto guardada.');
+            showToast(existing ? 'Venta de moto actualizada.' : 'Venta de moto guardada.');
         }
 
         function addTempLineItem() {
@@ -903,11 +1158,42 @@
             return { ok: true };
         }
 
-        function handleVentaCaexSubmit(event) {
+
+        function adjustStockForVentaCaexEdit(previousItems, nextItems) {
+            const itemsInventory = readStore(STORAGE_KEYS.items);
+            const raudaInventory = readStore(STORAGE_KEYS.rauda);
+            const pickInventory = type => type === 'items' ? itemsInventory : raudaInventory;
+
+            (previousItems || []).forEach(line => {
+                const found = pickInventory(line.inventoryType).find(item => item.id === line.productId);
+                if (found) found.stock = Number(found.stock || 0) + Number(line.units || 0);
+            });
+
+            for (const line of nextItems || []) {
+                const found = pickInventory(line.inventoryType).find(item => item.id === line.productId);
+                if (!found) return { ok: false, message: `El producto ${line.productName} ya no existe.` };
+                if (Number(found.stock || 0) < Number(line.units || 0)) {
+                    return { ok: false, message: `No hay suficiente stock para ${line.productName}.` };
+                }
+            }
+
+            (nextItems || []).forEach(line => {
+                const found = pickInventory(line.inventoryType).find(item => item.id === line.productId);
+                found.stock = Number(found.stock || 0) - Number(line.units || 0);
+            });
+
+            saveStore(STORAGE_KEYS.items, itemsInventory);
+            saveStore(STORAGE_KEYS.rauda, raudaInventory);
+            return { ok: true };
+        }
+
+                function handleVentaCaexSubmit(event) {
             event.preventDefault();
 
             const shipmentId = document.getElementById('ventaCaexClientSelect').value;
             const shipment = readStore(STORAGE_KEYS.caex).find(record => record.id === shipmentId);
+            const sales = readStore(STORAGE_KEYS.salesCaex);
+            const existing = editState.ventaCaex ? sales.find(record => record.id === editState.ventaCaex) : null;
 
             if (!shipment) {
                 showToast('Selecciona un cliente desde CAEX Envíos.');
@@ -936,24 +1222,27 @@
                 }
             }
 
-            const stockResult = applyStockReduction(tempCaexLineItems);
+            const nextItems = tempCaexLineItems.map(item => ({
+                inventoryType: item.inventoryType,
+                productId: item.productId,
+                productName: item.productName,
+                units: Number(item.units)
+            }));
+
+            const stockResult = existing
+                ? adjustStockForVentaCaexEdit(existing.items || [], nextItems)
+                : applyStockReduction(nextItems);
             if (!stockResult.ok) {
                 showToast(stockResult.message);
                 return;
             }
 
-            const sales = readStore(STORAGE_KEYS.salesCaex);
-            const dateMeta = makeDateMeta(document.getElementById('ventaCaexRecordDate').value);
-            sales.push({
-                id: generateId('salecaex'),
+            const dateMeta = makePersistedMeta(existing, document.getElementById('ventaCaexRecordDate').value, 'Venta CAEX editada');
+            const payload = {
+                id: existing ? existing.id : generateId('salecaex'),
                 shipmentId,
                 client: shipment.client,
-                items: tempCaexLineItems.map(item => ({
-                    inventoryType: item.inventoryType,
-                    productId: item.productId,
-                    productName: item.productName,
-                    units: Number(item.units)
-                })),
+                items: nextItems,
                 payment: fullPrepaid
                     ? {
                         fullPrepaid: true,
@@ -965,17 +1254,150 @@
                         advance: Number(advanceAmount || 0)
                     },
                 ...dateMeta
-            });
+            };
 
-            saveStore(STORAGE_KEYS.salesCaex, sales);
+            const next = existing ? sales.map(record => record.id === existing.id ? payload : record) : sales.concat(payload);
+            saveStore(STORAGE_KEYS.salesCaex, next);
 
-            tempCaexLineItems = [];
-            event.target.reset();
-            updatePaymentMode();
-            applyDefaultRecordDates();
-            renderTempLineItems();
+            resetVentaCaexForm();
             refreshEverything();
-            showToast('Venta CAEX guardada y stock actualizado.');
+            showToast(existing ? 'Venta CAEX actualizada y stock corregido.' : 'Venta CAEX guardada y stock actualizado.');
+        }
+
+
+        function propagateClientUpdate(clientData) {
+            const updateClientCopy = copy => copy && copy.id === clientData.id
+                ? { id: clientData.id, name: clientData.name, department: clientData.department, town: clientData.town, phones: [...(clientData.phones || [])] }
+                : copy;
+            const caex = readStore(STORAGE_KEYS.caex).map(record => Object.assign({}, record, { client: updateClientCopy(record.client) }));
+            const salesCaex = readStore(STORAGE_KEYS.salesCaex).map(record => Object.assign({}, record, { client: updateClientCopy(record.client) }));
+            saveStore(STORAGE_KEYS.caex, caex);
+            saveStore(STORAGE_KEYS.salesCaex, salesCaex);
+        }
+
+        function editInventoryRecord(type, id) {
+            const key = type === 'items' ? STORAGE_KEYS.items : STORAGE_KEYS.rauda;
+            const record = readStore(key).find(item => item.id === id);
+            if (!record) return;
+            if (type === 'items') {
+                editState.items = id;
+                document.getElementById('itemsRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
+                document.getElementById('itemsName').value = record.name || '';
+                document.getElementById('itemsStock').value = Number(record.stock || 0);
+                document.getElementById('itemsCost').value = Number(record.cost || 0);
+                document.getElementById('itemsMin').value = Number(record.minStock || 0);
+                showExistingUploadPreview('itemsPhoto', record.photo, 'Foto actual');
+                setSubmitButtonText('itemsForm', '<i class="fas fa-save mr-1"></i>Actualizar Items');
+                setCancelVisible('itemsForm', true);
+                scrollToSection('inventario-items');
+            } else {
+                editState.rauda = id;
+                document.getElementById('raudaRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
+                document.getElementById('raudaName').value = record.name || '';
+                document.getElementById('raudaStock').value = Number(record.stock || 0);
+                document.getElementById('raudaCost').value = Number(record.cost || 0);
+                showExistingUploadPreview('raudaPhoto', record.photo, 'Foto actual');
+                setSubmitButtonText('raudaForm', '<i class="fas fa-save mr-1"></i>Actualizar Rauda');
+                setCancelVisible('raudaForm', true);
+                scrollToSection('inventario-rauda');
+            }
+            showToast('Modo edición activado. Revisa y guarda los cambios.');
+        }
+
+        function editClientRecord(id) {
+            const record = readStore(STORAGE_KEYS.clients).find(item => item.id === id);
+            if (!record) return;
+            editState.client = id;
+            document.getElementById('clientRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
+            document.getElementById('clientName').value = record.name || '';
+            document.getElementById('clientDepartment').value = record.department || '';
+            document.getElementById('clientTown').value = record.town || '';
+            const phones = record.phones || [];
+            document.getElementById('clientPhone1').value = phones[0] || '';
+            document.getElementById('clientPhone2').value = phones[1] || '';
+            document.getElementById('clientPhone3').value = phones[2] || '';
+            setSubmitButtonText('clientsForm', '<i class="fas fa-save mr-1"></i>Actualizar cliente');
+            setCancelVisible('clientsForm', true);
+            scrollToSection('clientes-crear');
+            showToast('Modo edición de cliente activado.');
+        }
+
+        function editCaexRecord(id) {
+            const record = readStore(STORAGE_KEYS.caex).find(item => item.id === id);
+            if (!record) return;
+            editState.caex = id;
+            document.getElementById('caexRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
+            const clientExists = readStore(STORAGE_KEYS.clients).some(client => client.id === record.client.id);
+            if (clientExists) {
+                document.getElementById('caexModeExisting').checked = true;
+                updateCaexMode();
+                document.getElementById('caexClientSelect').value = record.client.id;
+            } else {
+                document.getElementById('caexModeNew').checked = true;
+                updateCaexMode();
+                document.getElementById('caexName').value = record.client.name || '';
+                document.getElementById('caexDepartment').value = record.client.department || '';
+                document.getElementById('caexTown').value = record.client.town || '';
+                const phones = record.client.phones || [];
+                document.getElementById('caexPhone1').value = phones[0] || '';
+                document.getElementById('caexPhone2').value = phones[1] || '';
+                document.getElementById('caexPhone3').value = phones[2] || '';
+            }
+            showExistingUploadPreview('caexReceipt', record.receipt, 'Comprobante actual');
+            setSubmitButtonText('caexForm', '<i class="fas fa-save mr-1"></i>Actualizar envío CAEX');
+            setCancelVisible('caexForm', true);
+            scrollToSection('caex-crear');
+            showToast('Modo edición de envío CAEX activado.');
+        }
+
+        function editSimpleSale(type, id) {
+            const key = type === 'encuentro' ? STORAGE_KEYS.salesEncuentro : STORAGE_KEYS.salesMoto;
+            const record = readStore(key).find(item => item.id === id);
+            if (!record) return;
+            if (type === 'encuentro') {
+                editState.encuentro = id;
+                document.getElementById('encuentroRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
+                document.getElementById('encuentroProduct').value = record.product || '';
+                document.getElementById('encuentroTime').value = record.time || '';
+                document.getElementById('encuentroPhone').value = record.phone || '';
+                document.getElementById('encuentroTotal').value = Number(record.total || 0);
+                setSubmitButtonText('encuentroForm', '<i class="fas fa-save mr-1"></i>Actualizar venta Encuentro');
+                setCancelVisible('encuentroForm', true);
+                scrollToSection('ventas-encuentro');
+            } else {
+                editState.moto = id;
+                document.getElementById('motoRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
+                document.getElementById('motoProduct').value = record.product || '';
+                document.getElementById('motoAddress').value = record.address || '';
+                document.getElementById('motoTime').value = record.time || '';
+                document.getElementById('motoPhone').value = record.phone || '';
+                document.getElementById('motoTotal').value = Number(record.total || 0);
+                setSubmitButtonText('motoForm', '<i class="fas fa-save mr-1"></i>Actualizar venta Moto');
+                setCancelVisible('motoForm', true);
+                scrollToSection('ventas-moto');
+            }
+            showToast('Modo edición de venta activado.');
+        }
+
+        function editVentaCaexRecord(id) {
+            const record = readStore(STORAGE_KEYS.salesCaex).find(item => item.id === id);
+            if (!record) return;
+            editState.ventaCaex = id;
+            document.getElementById('ventaCaexRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
+            renderCaexSelects();
+            document.getElementById('ventaCaexClientSelect').value = record.shipmentId || '';
+            renderVentaCaexClientInfo();
+            tempCaexLineItems = (record.items || []).map(item => Object.assign({}, item, { uid: generateId('line') }));
+            renderTempLineItems();
+            document.getElementById('caexFullPrepaid').checked = Boolean(record.payment?.fullPrepaid);
+            updatePaymentMode();
+            document.getElementById('caexFullAmount').value = record.payment?.fullPrepaid ? Number(record.payment.fullAmount || 0) : '';
+            document.getElementById('caexPayOnDelivery').value = record.payment?.fullPrepaid ? '' : Number(record.payment?.payOnDelivery || 0);
+            document.getElementById('caexAdvanceAmount').value = record.payment?.fullPrepaid ? '' : Number(record.payment?.advance || 0);
+            setSubmitButtonText('ventaCaexForm', '<i class="fas fa-save mr-1"></i>Actualizar venta CAEX');
+            setCancelVisible('ventaCaexForm', true);
+            scrollToSection('ventas-caex');
+            showToast('Modo edición de venta CAEX activado. Al guardar se corrige el stock.');
         }
 
         function deleteInventoryRecord(type, id) {
@@ -1046,6 +1468,7 @@
                     ${type === 'items' ? `<div class="detail-row"><span class="detail-label">Mínimo</span><div>${Number(record.minStock || 0)}</div></div>` : ''}
                     <div class="detail-row"><span class="detail-label">Fecha ingreso</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
+                    ${renderAuditRows(record)}
                 </div>
                 `
             );
@@ -1065,6 +1488,7 @@
                     <div class="detail-row"><span class="detail-label">Poblado</span><div>${escapeHtml(record.town)}</div></div>
                     <div class="detail-row"><span class="detail-label">Fecha registro</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
+                    ${renderAuditRows(record)}
                 </div>
                 `
             );
@@ -1085,6 +1509,7 @@
                     <div class="detail-row"><span class="detail-label">Comprobante</span><div>${record.receipt ? '<span class="pill pill-success">Archivo cargado</span>' : '<span class="pill pill-info">Sin archivo</span>'}</div></div>
                     <div class="detail-row"><span class="detail-label">Fecha envío</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
+                    ${renderAuditRows(record)}
                 </div>
                 `
             );
@@ -1123,6 +1548,7 @@
                     <div class="detail-row"><span class="detail-label">Total</span><div>${formatMoney(record.total)}</div></div>
                     <div class="detail-row"><span class="detail-label">Fecha venta</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
+                    ${renderAuditRows(record)}
                 </div>
                 `
             );
@@ -1142,6 +1568,7 @@
                     <div class="detail-row"><span class="detail-label">Pago</span><div>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</div></div>
                     <div class="detail-row"><span class="detail-label">Fecha venta</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
+                    ${renderAuditRows(record)}
                 </div>
                 `
             );
@@ -1168,6 +1595,7 @@
         document.querySelectorAll('.submenu a').forEach(link => {
             link.addEventListener('click', () => {
                 setTimeout(applyActiveSection, 80);
+                if (isMobileView()) closeMenu();
             });
         });
 
@@ -1192,11 +1620,23 @@
         });
 
         window.addEventListener('hashchange', applyActiveSection);
+        window.addEventListener('resize', setFabState);
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+        ensureCancelButton('itemsForm', 'items');
+        ensureCancelButton('raudaForm', 'rauda');
+        ensureCancelButton('clientsForm', 'client');
+        ensureCancelButton('caexForm', 'caex');
+        ensureCancelButton('encuentroForm', 'encuentro');
+        ensureCancelButton('motoForm', 'moto');
+        ensureCancelButton('ventaCaexForm', 'ventaCaex');
 
         setupSmartUploader('itemsPhoto');
         setupSmartUploader('raudaPhoto');
         setupSmartUploader('caexReceipt', { acceptedPaste: 'image', wrapperId: 'caexReceiptUploader' });
 
+        setFabState();
         applyDefaultRecordDates();
         updateCaexMode();
         updatePaymentMode();

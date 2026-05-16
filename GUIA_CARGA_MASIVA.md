@@ -73,3 +73,14 @@ assets/productos/
 ```
 
 Con eso ya no tienes que meter 100 productos uno por uno desde la web.
+
+## Edición de registros
+
+La web ahora tiene botón **Editar** en todas las secciones principales. Cuando se edita un registro, no se pierde la fecha original en que la web recibió el dato; se agrega auditoría con:
+
+- `updatedAt`: fecha y hora de la última edición.
+- `updatedAtISO`: fecha ISO de la última edición.
+- `editCount`: cantidad de veces que se editó.
+- `editHistory`: historial básico de ediciones.
+
+Esto ayuda a identificar si un producto, cliente, venta, envío CAEX o gasto fue corregido después de registrarlo.
