@@ -1345,6 +1345,14 @@
                     <div class="subpanel">
                         <div class="subpanel-title">Agregar producto a Items</div>
                         <form id="itemsForm">
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Fecha del ingreso del producto</label>
+                                    <input type="date" class="form-control" id="itemsRecordDate" required>
+                                    <div class="muted-line">La web también guarda automáticamente la fecha y hora exacta en que se capturó.</div>
+                                </div>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Nombre de producto</label>
@@ -1415,6 +1423,8 @@
                                         <th>Stock</th>
                                         <th>Costo inversión</th>
                                         <th>Mínimo</th>
+                                        <th>Fecha ingreso</th>
+                                        <th>Recibido web</th>
                                         <th>Estado</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -1443,6 +1453,14 @@
                     <div class="subpanel">
                         <div class="subpanel-title">Agregar producto a Rauda</div>
                         <form id="raudaForm">
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Fecha del ingreso del producto</label>
+                                    <input type="date" class="form-control" id="raudaRecordDate" required>
+                                    <div class="muted-line">La web también guarda automáticamente la fecha y hora exacta en que se capturó.</div>
+                                </div>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Nombre de producto</label>
@@ -1508,6 +1526,8 @@
                                         <th>Producto</th>
                                         <th>Stock</th>
                                         <th>Costo inversión</th>
+                                        <th>Fecha ingreso</th>
+                                        <th>Recibido web</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -1532,6 +1552,14 @@
             </div>
             <div class="section-body">
                 <form id="clientsForm">
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Fecha de registro del cliente</label>
+                            <input type="date" class="form-control" id="clientRecordDate" required>
+                            <div class="muted-line">La fecha/hora de captura en la web queda guardada aparte.</div>
+                        </div>
+                    </div>
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label>Nombre</label>
@@ -1587,7 +1615,8 @@
                                 <th>Teléfonos</th>
                                 <th>Departamento</th>
                                 <th>Poblado</th>
-                                <th>Fecha</th>
+                                <th>Fecha registro</th>
+                                <th>Recibido web</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -1627,6 +1656,14 @@
                 </div>
 
                 <form id="caexForm">
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Fecha del envío / ingreso CAEX</label>
+                            <input type="date" class="form-control" id="caexRecordDate" required>
+                            <div class="muted-line">La web también registra cuándo recibiste este dato.</div>
+                        </div>
+                    </div>
                     <div id="caexExistingPanel" class="subpanel mb-3">
                         <div class="subpanel-title">Seleccionar cliente ya registrado</div>
                         <div class="form-group mb-0">
@@ -1731,7 +1768,8 @@
                                 <th>Departamento</th>
                                 <th>Poblado</th>
                                 <th>Comprobante</th>
-                                <th>Fecha</th>
+                                <th>Fecha envío</th>
+                                <th>Recibido web</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -1757,6 +1795,12 @@
                     <div class="subpanel">
                         <div class="subpanel-title">Registrar venta por encuentro</div>
                         <form id="encuentroForm">
+
+                            <div class="form-group">
+                                <label>Fecha de venta</label>
+                                <input type="date" class="form-control" id="encuentroRecordDate" required>
+                                <div class="muted-line">La captura web se guarda automáticamente con hora exacta.</div>
+                            </div>
                             <div class="form-group">
                                 <label>Nombre de producto</label>
                                 <input type="text" class="form-control" id="encuentroProduct" required>
@@ -1789,7 +1833,8 @@
                                         <th>Hora</th>
                                         <th>Teléfono</th>
                                         <th>Total</th>
-                                        <th>Fecha</th>
+                                        <th>Fecha venta</th>
+                                        <th>Recibido web</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -1817,6 +1862,12 @@
                     <div class="subpanel">
                         <div class="subpanel-title">Registrar envío por moto</div>
                         <form id="motoForm">
+
+                            <div class="form-group">
+                                <label>Fecha de venta</label>
+                                <input type="date" class="form-control" id="motoRecordDate" required>
+                                <div class="muted-line">La captura web se guarda automáticamente con hora exacta.</div>
+                            </div>
                             <div class="form-group">
                                 <label>Nombre de producto</label>
                                 <input type="text" class="form-control" id="motoProduct" required>
@@ -1854,6 +1905,8 @@
                                         <th>Hora</th>
                                         <th>Teléfono</th>
                                         <th>Total</th>
+                                        <th>Fecha venta</th>
+                                        <th>Recibido web</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -1881,6 +1934,12 @@
                     <div class="subpanel">
                         <div class="subpanel-title">Registrar envío CAEX</div>
                         <form id="ventaCaexForm">
+
+                            <div class="form-group">
+                                <label>Fecha de venta CAEX</label>
+                                <input type="date" class="form-control" id="ventaCaexRecordDate" required>
+                                <div class="muted-line">La fecha/hora de captura en la web queda guardada aparte.</div>
+                            </div>
                             <div class="form-group">
                                 <label>Seleccionar cliente desde CAEX Envíos</label>
                                 <select id="ventaCaexClientSelect" class="custom-select"></select>
@@ -1952,7 +2011,8 @@
                                         <th>Cliente</th>
                                         <th>Productos</th>
                                         <th>Pago</th>
-                                        <th>Fecha</th>
+                                        <th>Fecha venta</th>
+                                        <th>Recibido web</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>

@@ -1,0 +1,9 @@
+# Formato:
+# Nombre del producto | stock | costo | minStock | fecha YYYY-MM-DD | imagen
+#
+# Si dejas imagen vacío, el script toma la siguiente foto de la carpeta --imagenes.
+# En Rauda puedes dejar minStock en 0.
+
+Chaleco reflectivo completo Naranja | 60 | 50 | 10 | 2026-05-16 | img1.png
+Cámara WiFi exterior 360 | 12 | 420 | 3 | 2026-05-16 | img2.jpg
+Repetidor WiFi inalámbrico | 25 | 145 | 5 | 2026-05-16 |

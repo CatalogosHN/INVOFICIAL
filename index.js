@@ -51,11 +51,36 @@
         function sortRecordsByDate(list) {
             if (!Array.isArray(list)) return [];
             return [...list].sort((a, b) => {
-                const aDate = new Date((a && (a.createdAtISO || a.updatedAtISO || a.createdAt || a.updatedAt)) || 0).getTime();
-                const bDate = new Date((b && (b.createdAtISO || b.updatedAtISO || b.createdAt || b.updatedAt)) || 0).getTime();
+                const aDate = getSortableDate(a);
+                const bDate = getSortableDate(b);
                 return bDate - aDate;
             });
         }
+
+        function parseLocalDate(value) {
+            if (!value) return null;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+                return new Date(`${value}T00:00:00`);
+            }
+            const parsed = new Date(value);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function getSortableDate(record) {
+            const parsed = parseLocalDate(record?.recordDate || record?.createdAtISO || record?.updatedAtISO || record?.createdAt || record?.updatedAt || 0);
+            return parsed ? parsed.getTime() : 0;
+        }
+
+        function formatDateOnly(value) {
+            const parsed = parseLocalDate(value);
+            if (!parsed) return value ? escapeHtml(value) : '-';
+            return parsed.toLocaleDateString('es-HN');
+        }
+
+        function getRecordDateText(record) {
+            return record?.recordDateText || formatDateOnly(record?.recordDate || record?.createdAtISO || record?.createdAt);
+        }
+
 
         function readStore(key) {
             try {
@@ -104,7 +129,7 @@
                 `).join('');
             }
 
-            const recentClients = [...clients].sort((a, b) => new Date(b.createdAtISO || 0) - new Date(a.createdAtISO || 0)).slice(0, 6);
+            const recentClients = [...clients].sort((a, b) => getSortableDate(b) - getSortableDate(a)).slice(0, 6);
             if (!recentClients.length) {
                 renderEmptyState('recentClientsList', 'Aún no hay clientes registrados.');
             } else {
@@ -112,7 +137,7 @@
                     <div class="list-item-soft">
                         <div class="item-main">
                             <strong>${escapeHtml(client.name)}</strong>
-                            <div class="item-muted">${escapeHtml(formatPhones(client.phones)) || 'Sin teléfono'} · ${escapeHtml(client.department || '')}${client.town ? ' · ' + escapeHtml(client.town) : ''}</div>
+                            <div class="item-muted">${escapeHtml(formatPhones(client.phones)) || 'Sin teléfono'} · ${escapeHtml(client.department || '')}${client.town ? ' · ' + escapeHtml(client.town) : ''} · ${escapeHtml(getRecordDateText(client))}</div>
                         </div>
                         <span class="pill-badge pill-success">Cliente</span>
                     </div>

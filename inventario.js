@@ -17,8 +17,8 @@
         function sortRecordsByDate(list) {
             if (!Array.isArray(list)) return [];
             return [...list].sort((a, b) => {
-                const aDate = new Date((a && (a.createdAtISO || a.updatedAtISO || a.createdAt || a.updatedAt)) || 0).getTime();
-                const bDate = new Date((b && (b.createdAtISO || b.updatedAtISO || b.createdAt || b.updatedAt)) || 0).getTime();
+                const aDate = getSortableDate(a);
+                const bDate = getSortableDate(b);
                 return bDate - aDate;
             });
         }
@@ -51,6 +51,79 @@
         function nowIso() {
             return new Date().toISOString();
         }
+
+        function todayDateValue() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            return now.toISOString().slice(0, 10);
+        }
+
+        function parseLocalDate(value) {
+            if (!value) return null;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+                return new Date(`${value}T00:00:00`);
+            }
+            const parsed = new Date(value);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function normalizeRecordDate(value) {
+            return String(value || '').trim() || todayDateValue();
+        }
+
+        function formatDateOnly(value) {
+            if (!value) return '-';
+            const parsed = parseLocalDate(value);
+            if (!parsed) return escapeHtml(value);
+            return parsed.toLocaleDateString('es-HN');
+        }
+
+        function getRecordDateValue(record) {
+            return record?.recordDate || record?.eventDate || record?.saleDate || record?.expenseDate || record?.createdAtISO || record?.createdAt || '';
+        }
+
+        function getRecordDateText(record) {
+            return record?.recordDateText || formatDateOnly(getRecordDateValue(record));
+        }
+
+        function getCaptureText(record) {
+            return record?.receivedAt || record?.createdAt || '-';
+        }
+
+        function getSortableDate(record) {
+            const parsed = parseLocalDate(getRecordDateValue(record));
+            return parsed ? parsed.getTime() : 0;
+        }
+
+        function makeDateMeta(recordDateValue) {
+            const recordDate = normalizeRecordDate(recordDateValue);
+            const receivedAt = nowText();
+            const receivedAtISO = nowIso();
+            return {
+                recordDate,
+                recordDateText: formatDateOnly(recordDate),
+                receivedAt,
+                receivedAtISO,
+                createdAt: receivedAt,
+                createdAtISO: receivedAtISO
+            };
+        }
+
+        function applyDefaultRecordDates() {
+            [
+                'itemsRecordDate',
+                'raudaRecordDate',
+                'clientRecordDate',
+                'caexRecordDate',
+                'encuentroRecordDate',
+                'motoRecordDate',
+                'ventaCaexRecordDate'
+            ].forEach(id => {
+                const input = document.getElementById(id);
+                if (input && !input.value) input.value = todayDateValue();
+            });
+        }
+
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -275,7 +348,7 @@
 
             const itemsBody = document.getElementById('itemsTableBody');
             if (!items.length) {
-                itemsBody.innerHTML = renderEmptyRow(7, 'No hay productos guardados en Items.');
+                itemsBody.innerHTML = renderEmptyRow(9, 'No hay productos guardados en Items.');
             } else {
                 itemsBody.innerHTML = items.map(item => {
                     const low = Number(item.minStock || 0) > 0 && Number(item.stock || 0) <= Number(item.minStock || 0);
@@ -286,6 +359,8 @@
                             <td>${Number(item.stock || 0)}</td>
                             <td>${formatMoney(item.cost)}</td>
                             <td>${Number(item.minStock || 0)}</td>
+                            <td>${escapeHtml(getRecordDateText(item))}</td>
+                            <td>${escapeHtml(getCaptureText(item))}</td>
                             <td><span class="pill ${low ? 'pill-warning' : 'pill-success'}">${low ? 'Stock bajo' : 'Disponible'}</span></td>
                             <td>
                                 <div class="actions-inline">
@@ -300,7 +375,7 @@
 
             const raudaBody = document.getElementById('raudaTableBody');
             if (!rauda.length) {
-                raudaBody.innerHTML = renderEmptyRow(5, 'No hay productos guardados en Rauda.');
+                raudaBody.innerHTML = renderEmptyRow(7, 'No hay productos guardados en Rauda.');
             } else {
                 raudaBody.innerHTML = rauda.map(item => `
                     <tr>
@@ -308,6 +383,8 @@
                         <td><strong>${escapeHtml(item.name)}</strong></td>
                         <td>${Number(item.stock || 0)}</td>
                         <td>${formatMoney(item.cost)}</td>
+                        <td>${escapeHtml(getRecordDateText(item))}</td>
+                        <td>${escapeHtml(getCaptureText(item))}</td>
                         <td>
                             <div class="actions-inline">
                                 <button class="btn btn-info-soft btn-sm" onclick="viewInventoryRecord('rauda','${item.id}')">Ver</button>
@@ -324,7 +401,7 @@
             const body = document.getElementById('clientsTableBody');
 
             if (!clients.length) {
-                body.innerHTML = renderEmptyRow(6, 'No hay clientes registrados todavía.');
+                body.innerHTML = renderEmptyRow(7, 'No hay clientes registrados todavía.');
                 return;
             }
 
@@ -338,7 +415,8 @@
                     </td>
                     <td>${escapeHtml(client.department || '-')}</td>
                     <td>${escapeHtml(client.town || '-')}</td>
-                    <td>${escapeHtml(client.createdAt || '-')}</td>
+                    <td>${escapeHtml(getRecordDateText(client))}</td>
+                    <td>${escapeHtml(getCaptureText(client))}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewClientRecord('${client.id}')">Ver</button>
@@ -379,7 +457,7 @@
             const body = document.getElementById('caexTableBody');
 
             if (!records.length) {
-                body.innerHTML = renderEmptyRow(7, 'No hay envíos CAEX guardados todavía.');
+                body.innerHTML = renderEmptyRow(8, 'No hay envíos CAEX guardados todavía.');
                 return;
             }
 
@@ -394,7 +472,8 @@
                     <td>${escapeHtml(record.client.department || '-')}</td>
                     <td>${escapeHtml(record.client.town || '-')}</td>
                     <td>${record.receipt ? `<button class="btn btn-info-soft btn-sm" onclick="viewCaexReceipt('${record.id}')">Ver</button>` : '<span class="pill pill-info">Sin archivo</span>'}</td>
-                    <td>${escapeHtml(record.createdAt || '-')}</td>
+                    <td>${escapeHtml(getRecordDateText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewCaexRecord('${record.id}')">Ver</button>
@@ -410,7 +489,7 @@
             const body = document.getElementById('encuentroTableBody');
 
             if (!records.length) {
-                body.innerHTML = renderEmptyRow(6, 'No hay ventas de encuentro registradas.');
+                body.innerHTML = renderEmptyRow(7, 'No hay ventas de encuentro registradas.');
                 return;
             }
 
@@ -420,7 +499,8 @@
                     <td>${escapeHtml(record.time)}</td>
                     <td>${escapeHtml(record.phone)}</td>
                     <td>${formatMoney(record.total)}</td>
-                    <td>${escapeHtml(record.createdAt)}</td>
+                    <td>${escapeHtml(getRecordDateText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewSimpleSale('encuentro','${record.id}')">Ver</button>
@@ -436,7 +516,7 @@
             const body = document.getElementById('motoTableBody');
 
             if (!records.length) {
-                body.innerHTML = renderEmptyRow(6, 'No hay ventas de moto registradas.');
+                body.innerHTML = renderEmptyRow(8, 'No hay ventas de moto registradas.');
                 return;
             }
 
@@ -447,6 +527,8 @@
                     <td>${escapeHtml(record.time)}</td>
                     <td>${escapeHtml(record.phone)}</td>
                     <td>${formatMoney(record.total)}</td>
+                    <td>${escapeHtml(getRecordDateText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewSimpleSale('moto','${record.id}')">Ver</button>
@@ -529,7 +611,7 @@
             const body = document.getElementById('ventaCaexTableBody');
 
             if (!records.length) {
-                body.innerHTML = renderEmptyRow(5, 'No hay ventas CAEX registradas.');
+                body.innerHTML = renderEmptyRow(6, 'No hay ventas CAEX registradas.');
                 return;
             }
 
@@ -538,7 +620,8 @@
                     <td><strong>${escapeHtml(record.client.name)}</strong></td>
                     <td>${record.items.map(item => `${escapeHtml(item.productName)} (${Number(item.units)})`).join('<br>')}</td>
                     <td>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</td>
-                    <td>${escapeHtml(record.createdAt)}</td>
+                    <td>${escapeHtml(getRecordDateText(record))}</td>
+                    <td>${escapeHtml(getCaptureText(record))}</td>
                     <td>
                         <div class="actions-inline">
                             <button class="btn btn-info-soft btn-sm" onclick="viewVentaCaexRecord('${record.id}')">Ver</button>
@@ -566,6 +649,7 @@
         async function handleItemsFormSubmit(event) {
             event.preventDefault();
             const items = readStore(STORAGE_KEYS.items);
+            const dateMeta = makeDateMeta(document.getElementById('itemsRecordDate').value);
             items.push({
                 id: generateId('item'),
                 name: document.getElementById('itemsName').value.trim(),
@@ -573,12 +657,12 @@
                 cost: Number(document.getElementById('itemsCost').value),
                 minStock: Number(document.getElementById('itemsMin').value),
                 photo: await fileToDataUrl(document.getElementById('itemsPhoto').files[0]),
-                createdAt: nowText(),
-                createdAtISO: nowIso()
+                ...dateMeta
             });
             saveStore(STORAGE_KEYS.items, items);
             event.target.reset();
             clearUploadSelection('itemsPhoto');
+            applyDefaultRecordDates();
             refreshEverything();
             showToast('Producto guardado en Items.');
         }
@@ -586,18 +670,19 @@
         async function handleRaudaFormSubmit(event) {
             event.preventDefault();
             const rauda = readStore(STORAGE_KEYS.rauda);
+            const dateMeta = makeDateMeta(document.getElementById('raudaRecordDate').value);
             rauda.push({
                 id: generateId('rauda'),
                 name: document.getElementById('raudaName').value.trim(),
                 stock: Number(document.getElementById('raudaStock').value),
                 cost: Number(document.getElementById('raudaCost').value),
                 photo: await fileToDataUrl(document.getElementById('raudaPhoto').files[0]),
-                createdAt: nowText(),
-                createdAtISO: nowIso()
+                ...dateMeta
             });
             saveStore(STORAGE_KEYS.rauda, rauda);
             event.target.reset();
             clearUploadSelection('raudaPhoto');
+            applyDefaultRecordDates();
             refreshEverything();
             showToast('Producto guardado en Rauda.');
         }
@@ -605,6 +690,7 @@
         function handleClientsFormSubmit(event) {
             event.preventDefault();
             const clients = readStore(STORAGE_KEYS.clients);
+            const dateMeta = makeDateMeta(document.getElementById('clientRecordDate').value);
             clients.push({
                 id: generateId('client'),
                 name: document.getElementById('clientName').value.trim(),
@@ -615,11 +701,11 @@
                     document.getElementById('clientPhone2').value,
                     document.getElementById('clientPhone3').value
                 ),
-                createdAt: nowText(),
-                createdAtISO: nowIso()
+                ...dateMeta
             });
             saveStore(STORAGE_KEYS.clients, clients);
             event.target.reset();
+            applyDefaultRecordDates();
             refreshEverything();
             showToast('Cliente guardado correctamente.');
         }
@@ -630,6 +716,7 @@
             const mode = document.querySelector('input[name="caexMode"]:checked').value;
             const clients = readStore(STORAGE_KEYS.clients);
             const caexRecords = readStore(STORAGE_KEYS.caex);
+            const shipmentDateMeta = makeDateMeta(document.getElementById('caexRecordDate').value);
             let clientData = null;
 
             if (mode === 'existing') {
@@ -654,14 +741,14 @@
                     return;
                 }
 
+                const clientDateMeta = makeDateMeta(document.getElementById('caexRecordDate').value);
                 clientData = {
                     id: generateId('client'),
                     name,
                     department,
                     town,
                     phones,
-                    createdAt: nowText(),
-                    createdAtISO: nowIso()
+                    ...clientDateMeta
                 };
 
                 clients.push(clientData);
@@ -678,8 +765,7 @@
                     phones: [...(clientData.phones || [])]
                 },
                 receipt: await fileToDataUrl(document.getElementById('caexReceipt').files[0]),
-                createdAt: nowText(),
-                createdAtISO: nowIso()
+                ...shipmentDateMeta
             });
 
             saveStore(STORAGE_KEYS.caex, caexRecords);
@@ -687,6 +773,7 @@
             clearUploadSelection('caexReceipt');
             document.getElementById('caexModeExisting').checked = true;
             updateCaexMode();
+            applyDefaultRecordDates();
             refreshEverything();
             showToast('Envío CAEX guardado correctamente.');
         }
@@ -694,17 +781,18 @@
         function handleEncuentroSubmit(event) {
             event.preventDefault();
             const records = readStore(STORAGE_KEYS.salesEncuentro);
+            const dateMeta = makeDateMeta(document.getElementById('encuentroRecordDate').value);
             records.push({
                 id: generateId('encuentro'),
                 product: document.getElementById('encuentroProduct').value.trim(),
                 time: document.getElementById('encuentroTime').value.trim(),
                 phone: document.getElementById('encuentroPhone').value.trim(),
                 total: Number(document.getElementById('encuentroTotal').value),
-                createdAt: nowText(),
-                createdAtISO: nowIso()
+                ...dateMeta
             });
             saveStore(STORAGE_KEYS.salesEncuentro, records);
             event.target.reset();
+            applyDefaultRecordDates();
             refreshEverything();
             showToast('Venta de encuentro guardada.');
         }
@@ -712,6 +800,7 @@
         function handleMotoSubmit(event) {
             event.preventDefault();
             const records = readStore(STORAGE_KEYS.salesMoto);
+            const dateMeta = makeDateMeta(document.getElementById('motoRecordDate').value);
             records.push({
                 id: generateId('moto'),
                 product: document.getElementById('motoProduct').value.trim(),
@@ -719,11 +808,11 @@
                 time: document.getElementById('motoTime').value.trim(),
                 phone: document.getElementById('motoPhone').value.trim(),
                 total: Number(document.getElementById('motoTotal').value),
-                createdAt: nowText(),
-                createdAtISO: nowIso()
+                ...dateMeta
             });
             saveStore(STORAGE_KEYS.salesMoto, records);
             event.target.reset();
+            applyDefaultRecordDates();
             refreshEverything();
             showToast('Venta de moto guardada.');
         }
@@ -854,6 +943,7 @@
             }
 
             const sales = readStore(STORAGE_KEYS.salesCaex);
+            const dateMeta = makeDateMeta(document.getElementById('ventaCaexRecordDate').value);
             sales.push({
                 id: generateId('salecaex'),
                 shipmentId,
@@ -874,8 +964,7 @@
                         payOnDelivery: Number(payOnDelivery || 0),
                         advance: Number(advanceAmount || 0)
                     },
-                createdAt: nowText(),
-                createdAtISO: nowIso()
+                ...dateMeta
             });
 
             saveStore(STORAGE_KEYS.salesCaex, sales);
@@ -883,6 +972,7 @@
             tempCaexLineItems = [];
             event.target.reset();
             updatePaymentMode();
+            applyDefaultRecordDates();
             renderTempLineItems();
             refreshEverything();
             showToast('Venta CAEX guardada y stock actualizado.');
@@ -954,7 +1044,8 @@
                     <div class="detail-row"><span class="detail-label">Stock</span><div>${Number(record.stock || 0)}</div></div>
                     <div class="detail-row"><span class="detail-label">Costo inversión</span><div>${formatMoney(record.cost)}</div></div>
                     ${type === 'items' ? `<div class="detail-row"><span class="detail-label">Mínimo</span><div>${Number(record.minStock || 0)}</div></div>` : ''}
-                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt || '-')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha ingreso</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
+                    <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                 </div>
                 `
             );
@@ -972,7 +1063,8 @@
                     <div class="detail-row"><span class="detail-label">Teléfonos</span><div>${(record.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ')}</div></div>
                     <div class="detail-row"><span class="detail-label">Departamento</span><div>${escapeHtml(record.department)}</div></div>
                     <div class="detail-row"><span class="detail-label">Poblado</span><div>${escapeHtml(record.town)}</div></div>
-                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt || '-')}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha registro</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
+                    <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                 </div>
                 `
             );
@@ -991,7 +1083,8 @@
                     <div class="detail-row"><span class="detail-label">Departamento</span><div>${escapeHtml(record.client.department || '-')}</div></div>
                     <div class="detail-row"><span class="detail-label">Poblado</span><div>${escapeHtml(record.client.town || '-')}</div></div>
                     <div class="detail-row"><span class="detail-label">Comprobante</span><div>${record.receipt ? '<span class="pill pill-success">Archivo cargado</span>' : '<span class="pill pill-info">Sin archivo</span>'}</div></div>
-                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha envío</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
+                    <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                 </div>
                 `
             );
@@ -1001,7 +1094,7 @@
             const record = readStore(STORAGE_KEYS.caex).find(item => item.id === id);
             if (!record || !record.receipt) return;
 
-            const isImage = /^data:image\//.test(record.receipt);
+            const isImage = /^data:image\//.test(record.receipt) || /\.(png|jpe?g|webp|gif)$/i.test(record.receipt);
             openModal(
                 `Comprobante · ${record.client.name}`,
                 isImage
@@ -1028,7 +1121,8 @@
                     <div class="detail-row"><span class="detail-label">Hora de entrega</span><div>${escapeHtml(record.time)}</div></div>
                     <div class="detail-row"><span class="detail-label">Teléfono</span><div>${escapeHtml(record.phone)}</div></div>
                     <div class="detail-row"><span class="detail-label">Total</span><div>${formatMoney(record.total)}</div></div>
-                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha venta</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
+                    <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                 </div>
                 `
             );
@@ -1046,7 +1140,8 @@
                     <div class="detail-row"><span class="detail-label">Teléfonos</span><div>${(record.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ')}</div></div>
                     <div class="detail-row"><span class="detail-label">Productos</span><div>${record.items.map(item => `${escapeHtml(item.productName)} · ${Number(item.units)} unidad(es) · ${item.inventoryType === 'items' ? 'Items' : 'Rauda'}`).join('<br>')}</div></div>
                     <div class="detail-row"><span class="detail-label">Pago</span><div>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</div></div>
-                    <div class="detail-row"><span class="detail-label">Fecha</span><div>${escapeHtml(record.createdAt)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Fecha venta</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
+                    <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                 </div>
                 `
             );
@@ -1102,6 +1197,7 @@
         setupSmartUploader('raudaPhoto');
         setupSmartUploader('caexReceipt', { acceptedPaste: 'image', wrapperId: 'caexReceiptUploader' });
 
+        applyDefaultRecordDates();
         updateCaexMode();
         updatePaymentMode();
         refreshEverything();

@@ -770,6 +770,12 @@
                 <div class="section-body">
                     <form id="expenseForm">
                         <input type="hidden" id="expenseId">
+
+                        <div class="form-group">
+                            <label for="expenseRecordDate">Fecha real del gasto</label>
+                            <input type="date" class="form-control" id="expenseRecordDate" required>
+                            <div class="muted-line">La web guarda aparte la fecha y hora exacta en que capturaste este dato.</div>
+                        </div>
                         <div class="form-group">
                             <label for="expenseType">Seccion</label>
                             <select class="custom-select" id="expenseType" required>
@@ -844,18 +850,19 @@
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
-                            <tr>
-                                <th>Foto</th>
-                                <th>Producto</th>
-                                <th>Seccion</th>
-                                <th>Cant.</th>
-                                <th>Precio</th>
-                                <th>Total</th>
-                                <th>Ingresado</th>
-                                <th>Editado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
+                                        <tr>
+                                            <th>Foto</th>
+                                            <th>Producto</th>
+                                            <th>Seccion</th>
+                                            <th>Cant.</th>
+                                            <th>Precio</th>
+                                            <th>Total</th>
+                                            <th>Fecha gasto</th>
+                                            <th>Recibido web</th>
+                                            <th>Editado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
                         <tbody id="expensesTableBody"></tbody>
                     </table>
                 </div>

@@ -176,10 +176,49 @@
         return data;
     }
 
-    function readLocalArray(key) {
+    
+    function parseLocalDate(value) {
+        if (!value) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+            return new Date(`${value}T00:00:00`);
+        }
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function inferRecordDate(record) {
+        const existing = record && (record.recordDate || record.eventDate || record.saleDate || record.expenseDate);
+        if (existing) return String(existing).slice(0, 10);
+        const parsed = parseLocalDate(record && (record.createdAtISO || record.receivedAtISO || record.createdAt || record.receivedAt));
+        if (!parsed) return '';
+        const local = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 10);
+    }
+
+    function formatDateOnly(value) {
+        const parsed = parseLocalDate(value);
+        return parsed ? parsed.toLocaleDateString('es-HN') : (value || '');
+    }
+
+    function normalizeRecordForSchema(record) {
+        if (!record || typeof record !== 'object') return record;
+        const next = Object.assign({}, record);
+        const recordDate = inferRecordDate(next);
+        if (recordDate && !next.recordDate) next.recordDate = recordDate;
+        if (recordDate && !next.recordDateText) next.recordDateText = formatDateOnly(recordDate);
+        if (!next.receivedAt && next.createdAt) next.receivedAt = next.createdAt;
+        if (!next.receivedAtISO && next.createdAtISO) next.receivedAtISO = next.createdAtISO;
+        return next;
+    }
+
+    function normalizeArrayForSchema(value) {
+        return Array.isArray(value) ? value.map(normalizeRecordForSchema) : [];
+    }
+
+function readLocalArray(key) {
         try {
             const value = JSON.parse(localStorage.getItem(key) || '[]');
-            return Array.isArray(value) ? value : [];
+            return normalizeArrayForSchema(value);
         } catch (error) {
             return [];
         }
@@ -187,8 +226,10 @@
 
     function snapshotLocalData() {
         return {
-            version: 1,
+            version: 2,
             app: 'WebOwnerAdmin',
+            schema: 'WebOwnerAdmin.v2',
+            schemaNote: 'recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato.',
             updatedAtISO: new Date().toISOString(),
             updatedAtText: formatNowText(),
             items: readLocalArray(STORAGE_KEYS.items),
@@ -205,7 +246,7 @@
     function applyRemotePayload(payload) {
         const safe = payload || {};
         Object.entries(STORAGE_KEYS).forEach(([name, storageKey]) => {
-            const arr = Array.isArray(safe[name]) ? safe[name] : [];
+            const arr = normalizeArrayForSchema(safe[name]);
             localStorage.setItem(storageKey, JSON.stringify(arr));
         });
     }

@@ -10,6 +10,7 @@
         [
             'expenseForm',
             'expenseId',
+            'expenseRecordDate',
             'expenseType',
             'expenseQuantity',
             'expenseProduct',
@@ -99,8 +100,8 @@
 
     function sortRecordsByDate(list) {
         return [...list].sort((a, b) => {
-            const aDate = new Date((a && (a.createdAtISO || a.createdAt)) || 0).getTime();
-            const bDate = new Date((b && (b.createdAtISO || b.createdAt)) || 0).getTime();
+            const aDate = parseLocalDate(a?.recordDate || a?.createdAtISO || a?.createdAt || 0)?.getTime() || 0;
+            const bDate = parseLocalDate(b?.recordDate || b?.createdAtISO || b?.createdAt || 0)?.getTime() || 0;
             return bDate - aDate;
         });
     }
@@ -120,6 +121,60 @@
         return new Date().toLocaleString('es-HN');
     }
 
+    function todayDateValue() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        return now.toISOString().slice(0, 10);
+    }
+
+    function parseLocalDate(value) {
+        if (!value) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+            return new Date(`${value}T00:00:00`);
+        }
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function normalizeRecordDate(value) {
+        return String(value || '').trim() || todayDateValue();
+    }
+
+    function formatDateOnly(value) {
+        const parsed = parseLocalDate(value);
+        if (!parsed) return value ? escapeHtml(value) : '-';
+        return parsed.toLocaleDateString('es-HN');
+    }
+
+    function getRecordDateText(record) {
+        return record?.recordDateText || formatDateOnly(record?.recordDate || record?.createdAtISO || record?.createdAt);
+    }
+
+    function getCaptureText(record) {
+        return record?.receivedAt || record?.createdAt || '-';
+    }
+
+    function makeDateMeta(recordDateValue) {
+        const recordDate = normalizeRecordDate(recordDateValue);
+        const receivedAt = nowText();
+        const receivedAtISO = nowIso();
+        return {
+            recordDate,
+            recordDateText: formatDateOnly(recordDate),
+            receivedAt,
+            receivedAtISO,
+            createdAt: receivedAt,
+            createdAtISO: receivedAtISO
+        };
+    }
+
+    function applyDefaultExpenseDate() {
+        if (nodes.expenseRecordDate && !nodes.expenseRecordDate.value) {
+            nodes.expenseRecordDate.value = todayDateValue();
+        }
+    }
+
+
     function toNumber(value) {
         return Number.parseFloat(value) || 0;
     }
@@ -134,8 +189,8 @@
 
     function formatDate(value) {
         if (!value) return '-';
-        const parsed = new Date(value);
-        if (Number.isNaN(parsed.getTime())) return escapeHtml(value);
+        const parsed = parseLocalDate(value);
+        if (!parsed) return escapeHtml(value);
         return parsed.toLocaleString('es-HN');
     }
 
@@ -202,8 +257,8 @@
     function filterExpenses(list) {
         const filters = getActiveFilters();
         return list.filter(expense => {
-            const created = new Date(expense.createdAtISO || expense.createdAt || 0);
-            if (Number.isNaN(created.getTime())) return false;
+            const created = parseLocalDate(expense.recordDate || expense.createdAtISO || expense.createdAt || 0);
+            if (!created) return false;
 
             const typeOk = filters.type === 'all' || expense.type === filters.type;
             const monthOk = !filters.month || created.getMonth() + 1 === Number(filters.month);
@@ -247,7 +302,7 @@
         if (!list.length) {
             nodes.expensesTableBody.innerHTML = `
                 <tr>
-                    <td colspan="9">
+                    <td colspan="10">
                         <div class="empty-state">No hay gastos para mostrar.</div>
                     </td>
                 </tr>
@@ -276,7 +331,8 @@
                     <td>${formatNumber(expense.quantity)}</td>
                     <td>${unit}</td>
                     <td><strong>${formatMoney(expense.total)}</strong></td>
-                    <td>${formatDate(expense.createdAtISO || expense.createdAt)}</td>
+                    <td>${escapeHtml(getRecordDateText(expense))}</td>
+                    <td>${escapeHtml(getCaptureText(expense))}</td>
                     <td>${edited}</td>
                     <td>
                         <div class="actions-inline">
@@ -306,6 +362,7 @@
         nodes.expensePhoto.value = '';
         nodes.formTitle.textContent = 'Nuevo gasto';
         nodes.cancelEditBtn.style.display = 'none';
+        applyDefaultExpenseDate();
         updatePhotoPreview('');
     }
 
@@ -320,6 +377,7 @@
         const manualTotal = toNumber(nodes.expenseTotal.value);
         const total = unitPrice > 0 ? quantity * unitPrice : manualTotal;
         const photoFromInput = await readFileAsDataUrl(nodes.expensePhoto.files?.[0]);
+        const dateMeta = makeDateMeta(nodes.expenseRecordDate.value);
 
         if (!nodes.expenseProduct.value.trim()) {
             showToast('Escribe el producto.');
@@ -343,8 +401,12 @@
             unitPrice,
             total,
             photo,
-            createdAt: existing ? existing.createdAt : nowText(),
-            createdAtISO: existing ? existing.createdAtISO : nowIso(),
+            recordDate: dateMeta.recordDate,
+            recordDateText: dateMeta.recordDateText,
+            receivedAt: existing ? (existing.receivedAt || existing.createdAt || dateMeta.receivedAt) : dateMeta.receivedAt,
+            receivedAtISO: existing ? (existing.receivedAtISO || existing.createdAtISO || dateMeta.receivedAtISO) : dateMeta.receivedAtISO,
+            createdAt: existing ? (existing.createdAt || dateMeta.createdAt) : dateMeta.createdAt,
+            createdAtISO: existing ? (existing.createdAtISO || dateMeta.createdAtISO) : dateMeta.createdAtISO,
             updatedAt: existing ? nowText() : '',
             updatedAtISO: existing ? nowIso() : ''
         };
@@ -364,6 +426,7 @@
         if (!expense) return;
 
         nodes.expenseId.value = expense.id;
+        nodes.expenseRecordDate.value = normalizeRecordDate(expense.recordDate || expense.createdAtISO || expense.createdAt);
         nodes.expenseType.value = expense.type || 'personal';
         nodes.expenseQuantity.value = formatNumber(expense.quantity || 1);
         nodes.expenseProduct.value = expense.product || '';
@@ -407,7 +470,8 @@
                 <div class="detail-row"><span class="detail-label">Cantidad</span><div>${formatNumber(expense.quantity)}</div></div>
                 <div class="detail-row"><span class="detail-label">Precio unitario</span><div>${Number(expense.unitPrice || 0) > 0 ? formatMoney(expense.unitPrice) : 'Manual'}</div></div>
                 <div class="detail-row"><span class="detail-label">Total gastado</span><div>${formatMoney(expense.total)}</div></div>
-                <div class="detail-row"><span class="detail-label">Fecha ingresado</span><div>${formatDate(expense.createdAtISO || expense.createdAt)}</div></div>
+                <div class="detail-row"><span class="detail-label">Fecha real del gasto</span><div>${escapeHtml(getRecordDateText(expense))}</div></div>
+                <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(expense))}</div></div>
                 <div class="detail-row"><span class="detail-label">Ultima fecha de edicion</span><div>${expense.updatedAtISO ? formatDate(expense.updatedAtISO) : 'Sin edicion'}</div></div>
             </div>
         `;
