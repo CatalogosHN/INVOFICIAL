@@ -3,8 +3,8 @@
   "app": "WebOwnerAdmin",
   "schema": "WebOwnerAdmin.v2",
   "schemaNote": "recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato.",
-  "updatedAtISO": "2026-05-16T21:41:49.123Z",
-  "updatedAtText": "16/5/2026, 3:41:49 p. m.",
+  "updatedAtISO": "2026-05-16T21:42:06.933Z",
+  "updatedAtText": "16/5/2026, 3:42:06 p. m.",
   "items": [
     {
       "id": "item_a823c672-e260-48f7-a6e0-9ac00032956a",
@@ -119,6 +119,24 @@
       "receivedAtISO": "2026-05-08T03:10:30.106Z"
     },
     {
+      "id": "expense_97a74b79-31cd-4cca-b4dd-a8d0d8595ef0",
+      "type": "personal",
+      "product": "Gasolina a roja R3",
+      "description": "Comprado 06/05/26",
+      "quantity": 1,
+      "unitPrice": 0,
+      "total": 150,
+      "photo": "",
+      "recordDate": "2026-05-06",
+      "recordDateText": "6/5/2026",
+      "receivedAt": "7/5/2026, 9:03:44 p. m.",
+      "receivedAtISO": "2026-05-08T03:03:44.063Z",
+      "createdAt": "7/5/2026, 9:03:44 p. m.",
+      "createdAtISO": "2026-05-08T03:03:44.063Z",
+      "updatedAt": "16/5/2026, 3:42:06 p. m.",
+      "updatedAtISO": "2026-05-16T21:42:06.032Z"
+    },
+    {
       "id": "expense_d66cc2b3-4b53-42db-9016-097cc56bf8bd",
       "type": "personal",
       "product": "Acondicionador pelo may",
@@ -135,24 +153,6 @@
       "createdAtISO": "2026-05-08T03:04:45.569Z",
       "updatedAt": "16/5/2026, 3:41:48 p. m.",
       "updatedAtISO": "2026-05-16T21:41:48.222Z"
-    },
-    {
-      "id": "expense_97a74b79-31cd-4cca-b4dd-a8d0d8595ef0",
-      "type": "personal",
-      "product": "Gasolina a roja R3",
-      "description": "Comprado 06/05/26",
-      "quantity": 1,
-      "unitPrice": 0,
-      "total": 150,
-      "photo": "",
-      "createdAt": "7/5/2026, 9:03:44 p. m.",
-      "createdAtISO": "2026-05-08T03:03:44.063Z",
-      "updatedAt": "7/5/2026, 9:06:49 p. m.",
-      "updatedAtISO": "2026-05-08T03:06:49.867Z",
-      "recordDate": "2026-05-07",
-      "recordDateText": "7/5/2026",
-      "receivedAt": "7/5/2026, 9:03:44 p. m.",
-      "receivedAtISO": "2026-05-08T03:03:44.063Z"
     },
     {
       "id": "expense_93eba5c6-2510-41d7-8b05-ccc9b94bf265",
