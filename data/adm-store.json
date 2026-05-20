@@ -3,8 +3,8 @@
   "app": "WebOwnerAdmin",
   "schema": "WebOwnerAdmin.v2",
   "schemaNote": "recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato; updatedAt/editCount/editHistory identifican ediciones.",
-  "updatedAtISO": "2026-05-20T20:14:05.853Z",
-  "updatedAtText": "20/5/2026, 2:14:05 p. m.",
+  "updatedAtISO": "2026-05-20T20:15:26.337Z",
+  "updatedAtText": "20/5/2026, 2:15:26 p. m.",
   "items": [
     {
       "id": "item_cabe5b8c-b472-4e8d-86ba-f8c759c5c8ed",
@@ -57,6 +57,20 @@
       "receivedAtISO": "2026-05-16T22:00:25.905Z",
       "createdAt": "16/5/2026, 4:00:25 p. m.",
       "createdAtISO": "2026-05-16T22:00:25.905Z"
+    },
+    {
+      "id": "item_d9e44717-ed8f-4243-b909-a650f59fca1b",
+      "name": "iPhone 16 Pro Max 256GB 97% BAT Todas Las Redes",
+      "stock": 1,
+      "cost": 19030.16,
+      "minStock": 1,
+      "photo": "",
+      "recordDate": "2026-05-20",
+      "recordDateText": "20/5/2026",
+      "receivedAt": "20/5/2026, 2:15:25 p. m.",
+      "receivedAtISO": "2026-05-20T20:15:25.424Z",
+      "createdAt": "20/5/2026, 2:15:25 p. m.",
+      "createdAtISO": "2026-05-20T20:15:25.424Z"
     }
   ],
   "rauda": [],
