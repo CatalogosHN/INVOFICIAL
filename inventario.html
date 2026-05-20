@@ -1173,6 +1173,86 @@
             .sync-actions .btn { width: 100%; }
         }
 
+
+
+        .business-summary-card {
+            border: 1px solid rgba(124, 92, 255, .18);
+            background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(244,244,255,.94));
+        }
+
+        .summary-filter-grid {
+            display: grid;
+            grid-template-columns: 180px minmax(180px, 1fr) minmax(220px, 1fr) auto;
+            gap: .85rem;
+            align-items: end;
+            margin-bottom: 1rem;
+        }
+
+        .summary-filter-grid label {
+            font-weight: 800;
+            color: var(--text-dark);
+            font-size: .88rem;
+        }
+
+        .range-inline {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .65rem;
+        }
+
+        .evidence-preview-list,
+        .evidence-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: .65rem;
+            width: 100%;
+        }
+
+        .evidence-thumb,
+        .evidence-gallery a {
+            border: 1px solid rgba(124, 92, 255, .18);
+            border-radius: .9rem;
+            background: rgba(255,255,255,.88);
+            padding: .45rem;
+            text-align: center;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: .76rem;
+            min-height: 92px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: .35rem;
+            overflow: hidden;
+        }
+
+        .evidence-thumb img,
+        .evidence-gallery img {
+            width: 100%;
+            height: 82px;
+            object-fit: cover;
+            border-radius: .65rem;
+            display: block;
+        }
+
+        .evidence-thumb-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            background: rgba(124, 92, 255, .12);
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .summary-filter-grid { grid-template-columns: 1fr; }
+            .range-inline { grid-template-columns: 1fr; }
+        }
+
     </style>
 
     <script src="keyauth-config.js"></script>
@@ -1188,6 +1268,7 @@
 
         <ul class="navigation">
             <li><a href="index.html"><i class="fas fa-home mr-3"></i><span class="nav-link-label">Dashboard</span></a></li>
+            <li><a href="#resumen-negocio" data-section="resumen-negocio"><i class="fas fa-chart-pie mr-3"></i><span class="nav-link-label">Resumen</span></a></li>
 
             <li class="nav-item has-sub open active-parent" data-group="inventario">
                 <a href="javascript:void(0)" class="menu-toggle">
@@ -1300,6 +1381,82 @@
 
 
                 <div id="lowStockAlert" class="alert-soft"></div>
+
+        <section id="resumen-negocio" class="section-card anchor-offset business-summary-card">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="title-icon"><i class="fas fa-chart-pie"></i></span>
+                        Resumen del negocio
+                    </h2>
+                    <p class="section-subtitle">Filtra por un mes exacto o por rango de fechas para ver inversión, ventas, ganancia y cantidad de envíos.</p>
+                </div>
+                <span class="mini-chip"><i class="fas fa-calendar-check"></i> <span id="businessRangeText">Mes actual</span></span>
+            </div>
+            <div class="section-body" id="businessSummaryPanel">
+                <div class="summary-filter-grid">
+                    <div>
+                        <label>Tipo de filtro</label>
+                        <select class="custom-select" id="summaryFilterMode">
+                            <option value="month">Mes exacto</option>
+                            <option value="range">Rango de fechas</option>
+                        </select>
+                    </div>
+                    <div id="summaryMonthBox">
+                        <label>Mes</label>
+                        <input type="month" class="form-control" id="summaryMonth">
+                    </div>
+                    <div id="summaryRangeBox" style="display:none;">
+                        <label>Desde / hasta</label>
+                        <div class="range-inline">
+                            <input type="date" class="form-control" id="summaryFromDate">
+                            <input type="date" class="form-control" id="summaryToDate">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary-soft" id="summaryRefreshBtn"><i class="fas fa-sync-alt mr-2"></i>Actualizar resumen</button>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card summary-primary">
+                        <div class="summary-icon"><i class="fas fa-boxes"></i></div>
+                        <div class="summary-label">Total invertido actual</div>
+                        <div class="summary-value" id="businessInvested">L 0.00</div>
+                    </div>
+                    <div class="summary-card summary-success">
+                        <div class="summary-icon"><i class="fas fa-cash-register"></i></div>
+                        <div class="summary-label">Total vendido filtrado</div>
+                        <div class="summary-value" id="businessSold">L 0.00</div>
+                    </div>
+                    <div class="summary-card summary-info">
+                        <div class="summary-icon"><i class="fas fa-coins"></i></div>
+                        <div class="summary-label">Ganancia total filtrada</div>
+                        <div class="summary-value" id="businessProfit">L 0.00</div>
+                    </div>
+                    <div class="summary-card summary-warning">
+                        <div class="summary-icon"><i class="fas fa-truck-loading"></i></div>
+                        <div class="summary-label">Envíos / ventas totales</div>
+                        <div class="summary-value" id="businessShipments">0</div>
+                    </div>
+                    <div class="summary-card summary-danger">
+                        <div class="summary-icon"><i class="fas fa-motorcycle"></i></div>
+                        <div class="summary-label">Moto</div>
+                        <div class="summary-value" id="businessMotoCount">0</div>
+                    </div>
+                    <div class="summary-card summary-primary">
+                        <div class="summary-icon"><i class="fas fa-shipping-fast"></i></div>
+                        <div class="summary-label">CAEX</div>
+                        <div class="summary-value" id="businessCaexCount">0</div>
+                    </div>
+                    <div class="summary-card summary-success">
+                        <div class="summary-icon"><i class="fas fa-handshake"></i></div>
+                        <div class="summary-label">Encuentro</div>
+                        <div class="summary-value" id="businessEncuentroCount">0</div>
+                    </div>
+                </div>
+                <div class="sync-note mt-3">Nota: la ganancia es exacta cuando se llena el costo de inversión en venta por encuentro/moto o cuando la venta CAEX sale desde productos con costo guardado.</div>
+            </div>
+        </section>
+
 
         <div class="summary-grid">
             <div class="summary-card summary-primary">

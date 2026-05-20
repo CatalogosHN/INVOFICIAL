@@ -9,6 +9,11 @@
         };
 
         let tempCaexLineItems = [];
+        const evidenceUploadState = {};
+        const MONEY_FORMATTER = new Intl.NumberFormat('es-HN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
         const editState = {
             items: null,
             rauda: null,
@@ -74,8 +79,20 @@
         }
 
         function saveStore(key, value) {
-            localStorage.setItem(key, JSON.stringify(value));
-            if (window.WebOwnerSync) window.WebOwnerSync.queueAutoSync();
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                if (window.WebOwnerSync) window.WebOwnerSync.queueAutoSync();
+                return true;
+            } catch (error) {
+                console.error('No se pudo guardar en localStorage:', error);
+                const isQuota = error && (error.name === 'QuotaExceededError' || error.code === 22 || error.code === 1014);
+                const msg = isQuota
+                    ? 'No se pudo guardar porque la imagen pesaba demasiado. Ahora la página comprime las fotos; intenta quitar esa foto y volverla a pegar/subir.'
+                    : 'No se pudo guardar el registro. Revisa la consola para más detalle.';
+                if (typeof showToast === 'function') showToast(msg);
+                alert(msg);
+                throw error;
+            }
         }
 
         function generateId(prefix = 'id') {
@@ -230,6 +247,7 @@
         function resetItemsForm() {
             document.getElementById('itemsForm').reset();
             clearUploadSelection('itemsPhoto', false);
+            clearEvidenceUpload('itemsPhotos', false);
             editState.items = null;
             setSubmitButtonText('itemsForm', 'Guardar en Items');
             setCancelVisible('itemsForm', false);
@@ -239,6 +257,7 @@
         function resetRaudaForm() {
             document.getElementById('raudaForm').reset();
             clearUploadSelection('raudaPhoto', false);
+            clearEvidenceUpload('raudaPhotos', false);
             editState.rauda = null;
             setSubmitButtonText('raudaForm', 'Guardar en Rauda');
             setCancelVisible('raudaForm', false);
@@ -247,6 +266,7 @@
 
         function resetClientForm() {
             document.getElementById('clientsForm').reset();
+            clearEvidenceUpload('clientPhotos', false);
             editState.client = null;
             setSubmitButtonText('clientsForm', 'Guardar cliente');
             setCancelVisible('clientsForm', false);
@@ -256,6 +276,7 @@
         function resetCaexForm() {
             document.getElementById('caexForm').reset();
             clearUploadSelection('caexReceipt', false);
+            clearEvidenceUpload('caexPhotos', false);
             editState.caex = null;
             document.getElementById('caexModeExisting').checked = true;
             updateCaexMode();
@@ -266,6 +287,7 @@
 
         function resetEncuentroForm() {
             document.getElementById('encuentroForm').reset();
+            clearEvidenceUpload('encuentroPhotos', false);
             editState.encuentro = null;
             setSubmitButtonText('encuentroForm', 'Guardar venta Encuentro');
             setCancelVisible('encuentroForm', false);
@@ -274,6 +296,7 @@
 
         function resetMotoForm() {
             document.getElementById('motoForm').reset();
+            clearEvidenceUpload('motoPhotos', false);
             editState.moto = null;
             setSubmitButtonText('motoForm', 'Guardar venta Moto');
             setCancelVisible('motoForm', false);
@@ -284,6 +307,7 @@
             document.getElementById('ventaCaexForm').reset();
             editState.ventaCaex = null;
             tempCaexLineItems = [];
+            clearEvidenceUpload('ventaCaexPhotos', false);
             updatePaymentMode();
             renderTempLineItems();
             setSubmitButtonText('ventaCaexForm', 'Guardar venta CAEX');
@@ -328,16 +352,40 @@
                 .replace(/'/g, '&#39;');
         }
 
+        function roundMoney(value) {
+            const number = Number(String(value ?? '').replace(/,/g, ''));
+            if (!Number.isFinite(number)) return 0;
+            return Math.round((number + Number.EPSILON) * 100) / 100;
+        }
+
         function formatMoney(value) {
             if (value === '' || value === null || value === undefined) return '-';
-            return 'L ' + Number(value || 0).toFixed(2);
+            const number = roundMoney(value);
+            return 'L ' + MONEY_FORMATTER.format(number);
+        }
+
+        function moneyInputValue(value) {
+            if (value === '' || value === null || value === undefined || Number.isNaN(Number(value))) return '';
+            return roundMoney(value).toFixed(2);
+        }
+
+        function readMoneyValue(inputId) {
+            const input = document.getElementById(inputId);
+            return roundMoney(input ? input.value : 0);
+        }
+
+        function paymentTotal(payment) {
+            if (!payment) return 0;
+            return payment.fullPrepaid
+                ? roundMoney(payment.fullAmount || 0)
+                : roundMoney(roundMoney(payment.advance || 0) + roundMoney(payment.payOnDelivery || 0));
         }
 
         function getPhones(phone1, phone2, phone3) {
             return [phone1, phone2, phone3].map(v => (v || '').trim()).filter(Boolean);
         }
 
-        function fileToDataUrl(file) {
+        function readFileAsRawDataUrl(file) {
             return new Promise(resolve => {
                 if (!file) {
                     resolve('');
@@ -348,6 +396,46 @@
                 reader.onerror = () => resolve('');
                 reader.readAsDataURL(file);
             });
+        }
+
+        function loadImageFromDataUrl(dataUrl) {
+            return new Promise(resolve => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => resolve(null);
+                image.src = dataUrl;
+            });
+        }
+
+        async function fileToDataUrl(file, options = {}) {
+            if (!file) return '';
+            const type = String(file.type || '').toLowerCase();
+            const raw = await readFileAsRawDataUrl(file);
+            if (!raw || !type.startsWith('image/')) return raw;
+
+            const maxSize = Number(options.maxSize || 1280);
+            const quality = Number(options.quality || 0.76);
+            const image = await loadImageFromDataUrl(raw);
+            if (!image || !image.width || !image.height) return raw;
+
+            let width = image.width;
+            let height = image.height;
+            const scale = Math.min(1, maxSize / Math.max(width, height));
+            width = Math.max(1, Math.round(width * scale));
+            height = Math.max(1, Math.round(height * scale));
+
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d', { alpha: false });
+                ctx.drawImage(image, 0, 0, width, height);
+                const compressed = canvas.toDataURL('image/jpeg', quality);
+                return compressed && compressed.length < raw.length ? compressed : raw;
+            } catch (error) {
+                console.warn('No se pudo comprimir la imagen, se usará original.', error);
+                return raw;
+            }
         }
 
         function openUploadPicker(inputId) {
@@ -532,6 +620,341 @@
             }
         }
 
+        function evidenceState(inputId) {
+            if (!evidenceUploadState[inputId]) {
+                evidenceUploadState[inputId] = { files: [], existing: [], removed: false };
+            }
+            return evidenceUploadState[inputId];
+        }
+
+        function normalizePhotos(record) {
+            if (!record) return [];
+            const photos = [];
+            if (Array.isArray(record.photos)) photos.push(...record.photos);
+            if (Array.isArray(record.attachments)) photos.push(...record.attachments);
+            return photos.filter(Boolean);
+        }
+
+        function countPhotos(record) {
+            return normalizePhotos(record).length + (record && record.photo ? 1 : 0) + (record && record.receipt ? 1 : 0);
+        }
+
+        function photoCountBadge(record) {
+            const count = countPhotos(record);
+            return count ? `<div class="mt-1"><span class="pill pill-info"><i class="fas fa-images mr-1"></i>${count} foto${count === 1 ? '' : 's'}</span></div>` : '';
+        }
+
+        function renderPhotoGallery(photos, title = 'Fotos guardadas') {
+            const clean = (photos || []).filter(Boolean);
+            if (!clean.length) return '';
+            return `
+                <div class="detail-row">
+                    <span class="detail-label">${escapeHtml(title)}</span>
+                    <div class="evidence-gallery">
+                        ${clean.map((photo, index) => `<a href="${photo}" target="_blank" rel="noopener noreferrer"><img src="${photo}" alt="Foto ${index + 1}"></a>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderEvidencePreview(inputId) {
+            const state = evidenceState(inputId);
+            const preview = document.getElementById(inputId + 'Preview');
+            const list = document.getElementById(inputId + 'PreviewList');
+            if (!preview || !list) return;
+
+            const existing = state.removed ? [] : state.existing;
+            const files = state.files || [];
+            if (!existing.length && !files.length) {
+                preview.classList.remove('show');
+                list.innerHTML = '';
+                return;
+            }
+
+            preview.classList.add('show');
+            const existingHtml = existing.map((src, index) => `
+                <div class="evidence-thumb">
+                    <img src="${src}" alt="Foto guardada ${index + 1}">
+                    <span>Guardada</span>
+                </div>
+            `).join('');
+            const filesHtml = files.map((file, index) => `
+                <div class="evidence-thumb">
+                    <span class="evidence-thumb-icon"><i class="fas fa-image"></i></span>
+                    <span>${escapeHtml(file.name || `Nueva foto ${index + 1}`)}</span>
+                </div>
+            `).join('');
+            list.innerHTML = existingHtml + filesHtml;
+        }
+
+        function appendEvidenceFiles(inputId, fileList, fromPaste = false) {
+            const files = Array.from(fileList || []).filter(file => (file.type || '').startsWith('image/'));
+            if (!files.length) {
+                showToast('Aquí solo se permiten imágenes.');
+                return;
+            }
+            const state = evidenceState(inputId);
+            state.files = state.files.concat(files).slice(0, 12);
+            state.removed = false;
+            renderEvidencePreview(inputId);
+            showToast(fromPaste ? 'Imagen pegada correctamente.' : 'Imagen agregada correctamente.');
+        }
+
+        function clearEvidenceUpload(inputId, markRemoved = true) {
+            const state = evidenceState(inputId);
+            state.files = [];
+            state.existing = markRemoved ? [] : (state.existing || []);
+            state.removed = Boolean(markRemoved);
+            const mainInput = document.getElementById(inputId);
+            const cameraInput = document.getElementById(inputId + 'Camera');
+            if (mainInput) mainInput.value = '';
+            if (cameraInput) cameraInput.value = '';
+            renderEvidencePreview(inputId);
+        }
+
+        function showExistingEvidence(inputId, photos) {
+            const state = evidenceState(inputId);
+            state.files = [];
+            state.existing = (photos || []).filter(Boolean);
+            state.removed = false;
+            renderEvidencePreview(inputId);
+        }
+
+        async function buildPhotosPayload(inputId, existingRecord) {
+            const state = evidenceState(inputId);
+            const existing = state.removed ? [] : (state.existing && state.existing.length ? state.existing : normalizePhotos(existingRecord));
+            const newPhotos = [];
+            for (const file of state.files || []) {
+                const dataUrl = await fileToDataUrl(file, { maxSize: 1100, quality: 0.74 });
+                if (dataUrl) newPhotos.push(dataUrl);
+            }
+            return existing.concat(newPhotos).filter(Boolean).slice(0, 12);
+        }
+
+        function evidenceUploaderMarkup(inputId, title, hint) {
+            return `
+                <div class="form-group evidence-uploader-wrap" id="${inputId}Uploader">
+                    <label>${escapeHtml(title)}</label>
+                    <div class="smart-upload">
+                        <div class="smart-upload-head">
+                            <div>
+                                <div class="smart-upload-title">Agregar 1 o más fotos</div>
+                                <div class="smart-upload-hint">${escapeHtml(hint || 'Puedes pegar con Ctrl + V, seleccionar varias imágenes o usar cámara.')}</div>
+                            </div>
+                            <div class="smart-upload-actions">
+                                <button type="button" class="btn btn-outline-soft btn-sm" onclick="openUploadPicker('${inputId}')"><i class="fas fa-images mr-1"></i>Archivos</button>
+                                <button type="button" class="btn btn-info-soft btn-sm" onclick="openUploadPicker('${inputId}Camera')"><i class="fas fa-camera mr-1"></i>Cámara</button>
+                                <button type="button" class="btn btn-danger-soft btn-sm" onclick="clearEvidenceUpload('${inputId}')"><i class="fas fa-times mr-1"></i>Quitar</button>
+                            </div>
+                        </div>
+                        <div class="smart-upload-zone" id="${inputId}Zone" tabindex="0">
+                            <div>
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <strong>Pega o selecciona fotos</strong>
+                                <span>Sirve para guardar evidencia, capturas, referencias del pedido o coordinación.</span>
+                            </div>
+                        </div>
+                        <input type="file" id="${inputId}" accept="image/*" multiple hidden>
+                        <input type="file" id="${inputId}Camera" accept="image/*" capture="environment" hidden>
+                        <div class="smart-upload-preview" id="${inputId}Preview">
+                            <div class="evidence-preview-list" id="${inputId}PreviewList"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function injectEvidenceUploader(formId, inputId, title, hint) {
+            const form = document.getElementById(formId);
+            if (!form || document.getElementById(inputId + 'Uploader')) return;
+            const submit = form.querySelector('button[type="submit"]');
+            if (!submit) return;
+            submit.insertAdjacentHTML('beforebegin', evidenceUploaderMarkup(inputId, title, hint));
+        }
+
+        function setupEvidenceUploader(inputId) {
+            const zone = document.getElementById(inputId + 'Zone');
+            const mainInput = document.getElementById(inputId);
+            const cameraInput = document.getElementById(inputId + 'Camera');
+            const wrapper = document.getElementById(inputId + 'Uploader');
+            if (!zone || !mainInput || !wrapper || wrapper.dataset.bound === '1') return;
+            wrapper.dataset.bound = '1';
+
+            zone.addEventListener('click', () => {
+                window.__lastFocusedUploader = inputId;
+                zone.focus();
+                mainInput.click();
+            });
+            zone.addEventListener('dragover', event => {
+                event.preventDefault();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', event => {
+                event.preventDefault();
+                zone.classList.remove('dragover');
+                appendEvidenceFiles(inputId, event.dataTransfer?.files || []);
+            });
+            zone.addEventListener('paste', event => {
+                const items = Array.from(event.clipboardData?.items || []);
+                const imageItems = items.filter(item => (item.type || '').startsWith('image/'));
+                if (!imageItems.length) return;
+                event.preventDefault();
+                const files = imageItems.map((item, index) => {
+                    const file = item.getAsFile();
+                    if (!file) return null;
+                    const ext = (file.type || 'image/png').split('/')[1] || 'png';
+                    return new File([file], `pegado-${Date.now()}-${index + 1}.${ext}`, { type: file.type || 'image/png' });
+                }).filter(Boolean);
+                appendEvidenceFiles(inputId, files, true);
+            });
+            mainInput.addEventListener('change', () => {
+                appendEvidenceFiles(inputId, mainInput.files || []);
+                mainInput.value = '';
+            });
+            if (cameraInput) {
+                cameraInput.addEventListener('change', () => {
+                    appendEvidenceFiles(inputId, cameraInput.files || []);
+                    cameraInput.value = '';
+                });
+            }
+        }
+
+        function injectOptionalMoneyField(formId, beforeInputId, inputId, label) {
+            if (document.getElementById(inputId)) return;
+            const beforeInput = document.getElementById(beforeInputId);
+            const group = beforeInput ? beforeInput.closest('.form-group') : null;
+            if (!group) return;
+            group.insertAdjacentHTML('beforebegin', `
+                <div class="form-group">
+                    <label>${escapeHtml(label)}</label>
+                    <input type="number" class="form-control money-input" id="${inputId}" min="0" step="0.01" placeholder="0.00">
+                    <div class="muted-line">Opcional. Si lo llenas, el resumen calcula ganancia real: venta - costo.</div>
+                </div>
+            `);
+        }
+
+        function setupMoneyInputs() {
+            document.querySelectorAll('input[type="number"][step="0.01"], .money-input').forEach(input => {
+                input.setAttribute('inputmode', 'decimal');
+                input.addEventListener('blur', () => {
+                    if (input.value !== '') input.value = moneyInputValue(input.value);
+                });
+            });
+        }
+
+        function setupExtraFormFields() {
+            injectEvidenceUploader('itemsForm', 'itemsPhotos', 'Fotos extra / evidencia', 'Opcional: guarda más fotos del producto o capturas de referencia.');
+            injectEvidenceUploader('raudaForm', 'raudaPhotos', 'Fotos extra / evidencia', 'Opcional: guarda más fotos del producto o capturas de referencia.');
+            injectEvidenceUploader('clientsForm', 'clientPhotos', 'Fotos del cliente / evidencia', 'Opcional: capturas de chat, ubicación o referencias del cliente.');
+            injectEvidenceUploader('caexForm', 'caexPhotos', 'Fotos extra del envío', 'Opcional: capturas, etiquetas, ubicación o más comprobantes.');
+            injectEvidenceUploader('encuentroForm', 'encuentroPhotos', 'Fotos de la venta / coordinación', 'Opcional: captura del pedido, producto o punto de encuentro.');
+            injectEvidenceUploader('motoForm', 'motoPhotos', 'Fotos de la venta / coordinación', 'Opcional: captura del pedido, producto, mapa o dirección.');
+            injectEvidenceUploader('ventaCaexForm', 'ventaCaexPhotos', 'Fotos de venta CAEX / coordinación', 'Opcional: captura del pedido, pago, productos o guía.');
+
+            ['itemsPhotos', 'raudaPhotos', 'clientPhotos', 'caexPhotos', 'encuentroPhotos', 'motoPhotos', 'ventaCaexPhotos'].forEach(setupEvidenceUploader);
+            injectOptionalMoneyField('encuentroForm', 'encuentroTotal', 'encuentroCost', 'Costo inversión de esta venta');
+            injectOptionalMoneyField('motoForm', 'motoTotal', 'motoCost', 'Costo inversión de esta venta');
+            setupMoneyInputs();
+        }
+
+        function getDateRangeFromSummaryFilters() {
+            const mode = document.getElementById('summaryFilterMode')?.value || 'month';
+            if (mode === 'range') {
+                const from = document.getElementById('summaryFromDate')?.value || todayDateValue();
+                const to = document.getElementById('summaryToDate')?.value || from;
+                return { from, to };
+            }
+            const month = document.getElementById('summaryMonth')?.value || todayDateValue().slice(0, 7);
+            return { from: `${month}-01`, to: lastDayOfMonth(month) };
+        }
+
+        function lastDayOfMonth(monthValue) {
+            const [year, month] = String(monthValue || todayDateValue().slice(0, 7)).split('-').map(Number);
+            const date = new Date(year, month, 0);
+            const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+            return local.toISOString().slice(0, 10);
+        }
+
+        function isRecordInRange(record, range) {
+            const date = normalizeRecordDate(getRecordDateValue(record));
+            return date >= range.from && date <= range.to;
+        }
+
+        function getVentaCaexCost(record) {
+            if (Number(record?.cost || 0) > 0) return roundMoney(record.cost);
+            return roundMoney((record?.items || []).reduce((sum, item) => sum + Number(item.lineCost || (Number(item.unitCost || 0) * Number(item.units || 0)) || 0), 0));
+        }
+
+        function getSaleProfit(record, type) {
+            if (Number.isFinite(Number(record?.profit))) return roundMoney(record.profit);
+            if (type === 'caex') return roundMoney(paymentTotal(record.payment) - getVentaCaexCost(record));
+            return roundMoney(Number(record?.total || 0) - Number(record?.cost || 0));
+        }
+
+        function updateSummaryFilterMode() {
+            const mode = document.getElementById('summaryFilterMode')?.value || 'month';
+            const monthBox = document.getElementById('summaryMonthBox');
+            const rangeBox = document.getElementById('summaryRangeBox');
+            if (monthBox) monthBox.style.display = mode === 'month' ? '' : 'none';
+            if (rangeBox) rangeBox.style.display = mode === 'range' ? '' : 'none';
+        }
+
+        function renderBusinessSummary() {
+            const panel = document.getElementById('businessSummaryPanel');
+            if (!panel) return;
+            const range = getDateRangeFromSummaryFilters();
+            const items = readStore(STORAGE_KEYS.items);
+            const rauda = readStore(STORAGE_KEYS.rauda);
+            const invested = items.concat(rauda).reduce((sum, item) => sum + Number(item.cost || 0) * Number(item.stock || 0), 0);
+            const encuentro = readStore(STORAGE_KEYS.salesEncuentro).filter(record => isRecordInRange(record, range));
+            const moto = readStore(STORAGE_KEYS.salesMoto).filter(record => isRecordInRange(record, range));
+            const caex = readStore(STORAGE_KEYS.salesCaex).filter(record => isRecordInRange(record, range));
+            const soldEncuentro = encuentro.reduce((sum, record) => sum + Number(record.total || 0), 0);
+            const soldMoto = moto.reduce((sum, record) => sum + Number(record.total || 0), 0);
+            const soldCaex = caex.reduce((sum, record) => sum + paymentTotal(record.payment), 0);
+            const totalSold = roundMoney(soldEncuentro + soldMoto + soldCaex);
+            const totalProfit = roundMoney(
+                encuentro.reduce((sum, record) => sum + getSaleProfit(record, 'encuentro'), 0) +
+                moto.reduce((sum, record) => sum + getSaleProfit(record, 'moto'), 0) +
+                caex.reduce((sum, record) => sum + getSaleProfit(record, 'caex'), 0)
+            );
+            const totalShipments = encuentro.length + moto.length + caex.length;
+
+            const setText = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            };
+            setText('businessInvested', formatMoney(invested));
+            setText('businessSold', formatMoney(totalSold));
+            setText('businessProfit', formatMoney(totalProfit));
+            setText('businessShipments', String(totalShipments));
+            setText('businessMotoCount', String(moto.length));
+            setText('businessCaexCount', String(caex.length));
+            setText('businessEncuentroCount', String(encuentro.length));
+            setText('businessRangeText', `${formatDateOnly(range.from)} - ${formatDateOnly(range.to)}`);
+        }
+
+        function initBusinessSummaryControls() {
+            const month = document.getElementById('summaryMonth');
+            const from = document.getElementById('summaryFromDate');
+            const to = document.getElementById('summaryToDate');
+            if (month && !month.value) month.value = todayDateValue().slice(0, 7);
+            if (from && !from.value) from.value = `${todayDateValue().slice(0, 7)}-01`;
+            if (to && !to.value) to.value = todayDateValue();
+            ['summaryFilterMode', 'summaryMonth', 'summaryFromDate', 'summaryToDate'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) input.addEventListener('change', () => {
+                    updateSummaryFilterMode();
+                    renderBusinessSummary();
+                });
+            });
+            const refresh = document.getElementById('summaryRefreshBtn');
+            if (refresh) refresh.addEventListener('click', renderBusinessSummary);
+            updateSummaryFilterMode();
+            renderBusinessSummary();
+        }
+
         function showToast(message) {
             const toast = document.getElementById('toastSoft');
             toast.textContent = message;
@@ -563,6 +986,7 @@
             document.getElementById('summaryClients').textContent = clients.length;
             document.getElementById('summaryCaex').textContent = caex.length;
             document.getElementById('summarySales').textContent = sales;
+            renderBusinessSummary();
 
             const lowStock = items.filter(item => Number(item.minStock || 0) > 0 && Number(item.stock || 0) <= Number(item.minStock || 0));
             const alertBox = document.getElementById('lowStockAlert');
@@ -593,7 +1017,7 @@
                     return `
                         <tr>
                             <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
-                            <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}</td>
+                            <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}${photoCountBadge(item)}</td>
                             <td>${Number(item.stock || 0)}</td>
                             <td>${formatMoney(item.cost)}</td>
                             <td>${Number(item.minStock || 0)}</td>
@@ -619,7 +1043,7 @@
                 raudaBody.innerHTML = rauda.map(item => `
                     <tr>
                         <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
-                        <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}</td>
+                        <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}${photoCountBadge(item)}</td>
                         <td>${Number(item.stock || 0)}</td>
                         <td>${formatMoney(item.cost)}</td>
                         <td>${escapeHtml(getRecordDateText(item))}</td>
@@ -647,7 +1071,7 @@
 
             body.innerHTML = clients.map(client => `
                 <tr>
-                    <td><strong>${escapeHtml(client.name)}</strong>${editBadge(client)}</td>
+                    <td><strong>${escapeHtml(client.name)}</strong>${editBadge(client)}${photoCountBadge(client)}</td>
                     <td>
                         <div class="phone-tags">
                             ${(client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join('') || '<span class="pill pill-info">Sin teléfono</span>'}
@@ -704,7 +1128,7 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.client.name)}</strong>${editBadge(record)}</td>
+                    <td><strong>${escapeHtml(record.client.name)}</strong>${editBadge(record)}${photoCountBadge(record)}</td>
                     <td>
                         <div class="phone-tags">
                             ${(record.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join('') || '<span class="pill pill-info">Sin teléfono</span>'}
@@ -737,7 +1161,7 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.product)}</strong>${editBadge(record)}</td>
+                    <td><strong>${escapeHtml(record.product)}</strong>${editBadge(record)}${photoCountBadge(record)}</td>
                     <td>${escapeHtml(record.time)}</td>
                     <td>${escapeHtml(record.phone)}</td>
                     <td>${formatMoney(record.total)}</td>
@@ -765,7 +1189,7 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.product)}</strong>${editBadge(record)}</td>
+                    <td><strong>${escapeHtml(record.product)}</strong>${editBadge(record)}${photoCountBadge(record)}</td>
                     <td>${escapeHtml(record.address)}</td>
                     <td>${escapeHtml(record.time)}</td>
                     <td>${escapeHtml(record.phone)}</td>
@@ -843,7 +1267,7 @@
                 <div class="line-item-row">
                     <div>
                         <strong>${escapeHtml(item.productName)}</strong>
-                        <div class="text-muted small">Inventario: ${item.inventoryType === 'items' ? 'Items' : 'Rauda'} · Unidades: ${Number(item.units)}</div>
+                        <div class="text-muted small">Inventario: ${item.inventoryType === 'items' ? 'Items' : 'Rauda'} · Unidades: ${Number(item.units)} · Costo: ${formatMoney(item.lineCost || (Number(item.unitCost || 0) * Number(item.units || 0)))}</div>
                     </div>
                     <button type="button" class="btn btn-danger-soft btn-sm" onclick="removeTempLineItem('${item.uid}')">Quitar</button>
                 </div>
@@ -861,9 +1285,9 @@
 
             body.innerHTML = records.map(record => `
                 <tr>
-                    <td><strong>${escapeHtml(record.client.name)}</strong>${editBadge(record)}</td>
+                    <td><strong>${escapeHtml(record.client.name)}</strong>${editBadge(record)}${photoCountBadge(record)}</td>
                     <td>${record.items.map(item => `${escapeHtml(item.productName)} (${Number(item.units)})`).join('<br>')}</td>
-                    <td>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</td>
+                    <td>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}<br><span class="pill pill-success">Ganancia ${formatMoney(getSaleProfit(record, 'caex'))}</span></td>
                     <td>${escapeHtml(getRecordDateText(record))}</td>
                     <td>${escapeHtml(getCaptureText(record))}${editBadge(record)}</td>
                     <td>
@@ -897,13 +1321,15 @@
             const existing = editState.items ? items.find(item => item.id === editState.items) : null;
             const dateMeta = makePersistedMeta(existing, document.getElementById('itemsRecordDate').value, 'Producto Items editado');
             const newPhoto = await fileToDataUrl(document.getElementById('itemsPhoto').files[0]);
+            const photos = await buildPhotosPayload('itemsPhotos', existing);
             const payload = {
                 id: existing ? existing.id : generateId('item'),
                 name: document.getElementById('itemsName').value.trim(),
                 stock: Number(document.getElementById('itemsStock').value),
-                cost: Number(document.getElementById('itemsCost').value),
+                cost: readMoneyValue('itemsCost'),
                 minStock: Number(document.getElementById('itemsMin').value),
                 photo: newPhoto || (uploadRemoveFlags.itemsPhoto ? '' : existing?.photo || ''),
+                photos,
                 ...dateMeta
             };
             const next = existing ? items.map(item => item.id === existing.id ? payload : item) : items.concat(payload);
@@ -919,12 +1345,14 @@
             const existing = editState.rauda ? rauda.find(item => item.id === editState.rauda) : null;
             const dateMeta = makePersistedMeta(existing, document.getElementById('raudaRecordDate').value, 'Producto Rauda editado');
             const newPhoto = await fileToDataUrl(document.getElementById('raudaPhoto').files[0]);
+            const photos = await buildPhotosPayload('raudaPhotos', existing);
             const payload = {
                 id: existing ? existing.id : generateId('rauda'),
                 name: document.getElementById('raudaName').value.trim(),
                 stock: Number(document.getElementById('raudaStock').value),
-                cost: Number(document.getElementById('raudaCost').value),
+                cost: readMoneyValue('raudaCost'),
                 photo: newPhoto || (uploadRemoveFlags.raudaPhoto ? '' : existing?.photo || ''),
+                photos,
                 ...dateMeta
             };
             const next = existing ? rauda.map(item => item.id === existing.id ? payload : item) : rauda.concat(payload);
@@ -934,11 +1362,12 @@
             showToast(existing ? 'Producto Rauda actualizado.' : 'Producto guardado en Rauda.');
         }
 
-                function handleClientsFormSubmit(event) {
+        async function handleClientsFormSubmit(event) {
             event.preventDefault();
             const clients = readStore(STORAGE_KEYS.clients);
             const existing = editState.client ? clients.find(client => client.id === editState.client) : null;
             const dateMeta = makePersistedMeta(existing, document.getElementById('clientRecordDate').value, 'Cliente editado');
+            const photos = await buildPhotosPayload('clientPhotos', existing);
             const payload = {
                 id: existing ? existing.id : generateId('client'),
                 name: document.getElementById('clientName').value.trim(),
@@ -949,6 +1378,7 @@
                     document.getElementById('clientPhone2').value,
                     document.getElementById('clientPhone3').value
                 ),
+                photos,
                 ...dateMeta
             };
             const next = existing ? clients.map(client => client.id === existing.id ? payload : client) : clients.concat(payload);
@@ -1011,6 +1441,7 @@
             }
 
             const newReceipt = await fileToDataUrl(document.getElementById('caexReceipt').files[0]);
+            const photos = await buildPhotosPayload('caexPhotos', existing);
             const payload = {
                 id: existing ? existing.id : generateId('caex'),
                 client: {
@@ -1021,6 +1452,7 @@
                     phones: [...(clientData.phones || [])]
                 },
                 receipt: newReceipt || (uploadRemoveFlags.caexReceipt ? '' : existing?.receipt || ''),
+                photos,
                 ...shipmentDateMeta
             };
 
@@ -1031,17 +1463,23 @@
             showToast(existing ? 'Envío CAEX actualizado.' : 'Envío CAEX guardado correctamente.');
         }
 
-                function handleEncuentroSubmit(event) {
+        async function handleEncuentroSubmit(event) {
             event.preventDefault();
             const records = readStore(STORAGE_KEYS.salesEncuentro);
             const existing = editState.encuentro ? records.find(record => record.id === editState.encuentro) : null;
             const dateMeta = makePersistedMeta(existing, document.getElementById('encuentroRecordDate').value, 'Venta encuentro editada');
+            const total = readMoneyValue('encuentroTotal');
+            const cost = readMoneyValue('encuentroCost');
+            const photos = await buildPhotosPayload('encuentroPhotos', existing);
             const payload = {
                 id: existing ? existing.id : generateId('encuentro'),
                 product: document.getElementById('encuentroProduct').value.trim(),
                 time: document.getElementById('encuentroTime').value.trim(),
                 phone: document.getElementById('encuentroPhone').value.trim(),
-                total: Number(document.getElementById('encuentroTotal').value),
+                total,
+                cost,
+                profit: roundMoney(total - cost),
+                photos,
                 ...dateMeta
             };
             const next = existing ? records.map(record => record.id === existing.id ? payload : record) : records.concat(payload);
@@ -1051,18 +1489,24 @@
             showToast(existing ? 'Venta de encuentro actualizada.' : 'Venta de encuentro guardada.');
         }
 
-                function handleMotoSubmit(event) {
+        async function handleMotoSubmit(event) {
             event.preventDefault();
             const records = readStore(STORAGE_KEYS.salesMoto);
             const existing = editState.moto ? records.find(record => record.id === editState.moto) : null;
             const dateMeta = makePersistedMeta(existing, document.getElementById('motoRecordDate').value, 'Venta moto editada');
+            const total = readMoneyValue('motoTotal');
+            const cost = readMoneyValue('motoCost');
+            const photos = await buildPhotosPayload('motoPhotos', existing);
             const payload = {
                 id: existing ? existing.id : generateId('moto'),
                 product: document.getElementById('motoProduct').value.trim(),
                 address: document.getElementById('motoAddress').value.trim(),
                 time: document.getElementById('motoTime').value.trim(),
                 phone: document.getElementById('motoPhone').value.trim(),
-                total: Number(document.getElementById('motoTotal').value),
+                total,
+                cost,
+                profit: roundMoney(total - cost),
+                photos,
                 ...dateMeta
             };
             const next = existing ? records.map(record => record.id === existing.id ? payload : record) : records.concat(payload);
@@ -1100,7 +1544,9 @@
                 inventoryType,
                 productId,
                 productName: product.name,
-                units
+                units,
+                unitCost: roundMoney(product.cost || 0),
+                lineCost: roundMoney(Number(product.cost || 0) * Number(units || 0))
             });
 
             renderTempLineItems();
@@ -1187,7 +1633,7 @@
             return { ok: true };
         }
 
-                function handleVentaCaexSubmit(event) {
+        async function handleVentaCaexSubmit(event) {
             event.preventDefault();
 
             const shipmentId = document.getElementById('ventaCaexClientSelect').value;
@@ -1226,7 +1672,9 @@
                 inventoryType: item.inventoryType,
                 productId: item.productId,
                 productName: item.productName,
-                units: Number(item.units)
+                units: Number(item.units),
+                unitCost: roundMoney(item.unitCost || 0),
+                lineCost: roundMoney(item.lineCost || (Number(item.unitCost || 0) * Number(item.units || 0)))
             }));
 
             const stockResult = existing
@@ -1238,20 +1686,27 @@
             }
 
             const dateMeta = makePersistedMeta(existing, document.getElementById('ventaCaexRecordDate').value, 'Venta CAEX editada');
+            const photos = await buildPhotosPayload('ventaCaexPhotos', existing);
+            const saleTotal = fullPrepaid ? readMoneyValue('caexFullAmount') : roundMoney(readMoneyValue('caexPayOnDelivery') + readMoneyValue('caexAdvanceAmount'));
+            const saleCost = roundMoney(nextItems.reduce((sum, item) => sum + Number(item.lineCost || 0), 0));
             const payload = {
                 id: existing ? existing.id : generateId('salecaex'),
                 shipmentId,
                 client: shipment.client,
                 items: nextItems,
+                total: saleTotal,
+                cost: saleCost,
+                profit: roundMoney(saleTotal - saleCost),
+                photos,
                 payment: fullPrepaid
                     ? {
                         fullPrepaid: true,
-                        fullAmount: Number(fullAmount || 0)
+                        fullAmount: readMoneyValue('caexFullAmount')
                     }
                     : {
                         fullPrepaid: false,
-                        payOnDelivery: Number(payOnDelivery || 0),
-                        advance: Number(advanceAmount || 0)
+                        payOnDelivery: readMoneyValue('caexPayOnDelivery'),
+                        advance: readMoneyValue('caexAdvanceAmount')
                     },
                 ...dateMeta
             };
@@ -1284,9 +1739,10 @@
                 document.getElementById('itemsRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
                 document.getElementById('itemsName').value = record.name || '';
                 document.getElementById('itemsStock').value = Number(record.stock || 0);
-                document.getElementById('itemsCost').value = Number(record.cost || 0);
+                document.getElementById('itemsCost').value = moneyInputValue(record.cost || 0);
                 document.getElementById('itemsMin').value = Number(record.minStock || 0);
                 showExistingUploadPreview('itemsPhoto', record.photo, 'Foto actual');
+                showExistingEvidence('itemsPhotos', normalizePhotos(record));
                 setSubmitButtonText('itemsForm', '<i class="fas fa-save mr-1"></i>Actualizar Items');
                 setCancelVisible('itemsForm', true);
                 scrollToSection('inventario-items');
@@ -1295,8 +1751,9 @@
                 document.getElementById('raudaRecordDate').value = formatDateInput(record.recordDate || record.createdAtISO || record.createdAt);
                 document.getElementById('raudaName').value = record.name || '';
                 document.getElementById('raudaStock').value = Number(record.stock || 0);
-                document.getElementById('raudaCost').value = Number(record.cost || 0);
+                document.getElementById('raudaCost').value = moneyInputValue(record.cost || 0);
                 showExistingUploadPreview('raudaPhoto', record.photo, 'Foto actual');
+                showExistingEvidence('raudaPhotos', normalizePhotos(record));
                 setSubmitButtonText('raudaForm', '<i class="fas fa-save mr-1"></i>Actualizar Rauda');
                 setCancelVisible('raudaForm', true);
                 scrollToSection('inventario-rauda');
@@ -1316,6 +1773,7 @@
             document.getElementById('clientPhone1').value = phones[0] || '';
             document.getElementById('clientPhone2').value = phones[1] || '';
             document.getElementById('clientPhone3').value = phones[2] || '';
+            showExistingEvidence('clientPhotos', normalizePhotos(record));
             setSubmitButtonText('clientsForm', '<i class="fas fa-save mr-1"></i>Actualizar cliente');
             setCancelVisible('clientsForm', true);
             scrollToSection('clientes-crear');
@@ -1344,6 +1802,7 @@
                 document.getElementById('caexPhone3').value = phones[2] || '';
             }
             showExistingUploadPreview('caexReceipt', record.receipt, 'Comprobante actual');
+            showExistingEvidence('caexPhotos', normalizePhotos(record));
             setSubmitButtonText('caexForm', '<i class="fas fa-save mr-1"></i>Actualizar envío CAEX');
             setCancelVisible('caexForm', true);
             scrollToSection('caex-crear');
@@ -1360,7 +1819,9 @@
                 document.getElementById('encuentroProduct').value = record.product || '';
                 document.getElementById('encuentroTime').value = record.time || '';
                 document.getElementById('encuentroPhone').value = record.phone || '';
-                document.getElementById('encuentroTotal').value = Number(record.total || 0);
+                document.getElementById('encuentroTotal').value = moneyInputValue(record.total || 0);
+                document.getElementById('encuentroCost').value = moneyInputValue(record.cost || 0);
+                showExistingEvidence('encuentroPhotos', normalizePhotos(record));
                 setSubmitButtonText('encuentroForm', '<i class="fas fa-save mr-1"></i>Actualizar venta Encuentro');
                 setCancelVisible('encuentroForm', true);
                 scrollToSection('ventas-encuentro');
@@ -1371,7 +1832,9 @@
                 document.getElementById('motoAddress').value = record.address || '';
                 document.getElementById('motoTime').value = record.time || '';
                 document.getElementById('motoPhone').value = record.phone || '';
-                document.getElementById('motoTotal').value = Number(record.total || 0);
+                document.getElementById('motoTotal').value = moneyInputValue(record.total || 0);
+                document.getElementById('motoCost').value = moneyInputValue(record.cost || 0);
+                showExistingEvidence('motoPhotos', normalizePhotos(record));
                 setSubmitButtonText('motoForm', '<i class="fas fa-save mr-1"></i>Actualizar venta Moto');
                 setCancelVisible('motoForm', true);
                 scrollToSection('ventas-moto');
@@ -1391,9 +1854,10 @@
             renderTempLineItems();
             document.getElementById('caexFullPrepaid').checked = Boolean(record.payment?.fullPrepaid);
             updatePaymentMode();
-            document.getElementById('caexFullAmount').value = record.payment?.fullPrepaid ? Number(record.payment.fullAmount || 0) : '';
-            document.getElementById('caexPayOnDelivery').value = record.payment?.fullPrepaid ? '' : Number(record.payment?.payOnDelivery || 0);
-            document.getElementById('caexAdvanceAmount').value = record.payment?.fullPrepaid ? '' : Number(record.payment?.advance || 0);
+            document.getElementById('caexFullAmount').value = record.payment?.fullPrepaid ? moneyInputValue(record.payment.fullAmount || 0) : '';
+            document.getElementById('caexPayOnDelivery').value = record.payment?.fullPrepaid ? '' : moneyInputValue(record.payment?.payOnDelivery || 0);
+            document.getElementById('caexAdvanceAmount').value = record.payment?.fullPrepaid ? '' : moneyInputValue(record.payment?.advance || 0);
+            showExistingEvidence('ventaCaexPhotos', normalizePhotos(record));
             setSubmitButtonText('ventaCaexForm', '<i class="fas fa-save mr-1"></i>Actualizar venta CAEX');
             setCancelVisible('ventaCaexForm', true);
             scrollToSection('ventas-caex');
@@ -1462,12 +1926,14 @@
                 `
                 <div class="detail-list">
                     ${record.photo ? `<div class="text-center"><img src="${record.photo}" class="thumb-preview" alt="Foto"></div>` : ''}
+                    ${renderPhotoGallery(normalizePhotos(record), 'Fotos extra')}
                     <div class="detail-row"><span class="detail-label">Producto</span><div>${escapeHtml(record.name)}</div></div>
                     <div class="detail-row"><span class="detail-label">Stock</span><div>${Number(record.stock || 0)}</div></div>
                     <div class="detail-row"><span class="detail-label">Costo inversión</span><div>${formatMoney(record.cost)}</div></div>
                     ${type === 'items' ? `<div class="detail-row"><span class="detail-label">Mínimo</span><div>${Number(record.minStock || 0)}</div></div>` : ''}
                     <div class="detail-row"><span class="detail-label">Fecha ingreso</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
+                    ${renderPhotoGallery(normalizePhotos(record), 'Fotos / evidencia')}
                     ${renderAuditRows(record)}
                 </div>
                 `
@@ -1486,6 +1952,7 @@
                     <div class="detail-row"><span class="detail-label">Teléfonos</span><div>${(record.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ')}</div></div>
                     <div class="detail-row"><span class="detail-label">Departamento</span><div>${escapeHtml(record.department)}</div></div>
                     <div class="detail-row"><span class="detail-label">Poblado</span><div>${escapeHtml(record.town)}</div></div>
+                    ${renderPhotoGallery(normalizePhotos(record), 'Fotos / evidencia')}
                     <div class="detail-row"><span class="detail-label">Fecha registro</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                     ${renderAuditRows(record)}
@@ -1507,6 +1974,7 @@
                     <div class="detail-row"><span class="detail-label">Departamento</span><div>${escapeHtml(record.client.department || '-')}</div></div>
                     <div class="detail-row"><span class="detail-label">Poblado</span><div>${escapeHtml(record.client.town || '-')}</div></div>
                     <div class="detail-row"><span class="detail-label">Comprobante</span><div>${record.receipt ? '<span class="pill pill-success">Archivo cargado</span>' : '<span class="pill pill-info">Sin archivo</span>'}</div></div>
+                    ${renderPhotoGallery(normalizePhotos(record), 'Fotos extra del envío')}
                     <div class="detail-row"><span class="detail-label">Fecha envío</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                     ${renderAuditRows(record)}
@@ -1546,6 +2014,9 @@
                     <div class="detail-row"><span class="detail-label">Hora de entrega</span><div>${escapeHtml(record.time)}</div></div>
                     <div class="detail-row"><span class="detail-label">Teléfono</span><div>${escapeHtml(record.phone)}</div></div>
                     <div class="detail-row"><span class="detail-label">Total</span><div>${formatMoney(record.total)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Costo inversión</span><div>${formatMoney(record.cost || 0)}</div></div>
+                    <div class="detail-row"><span class="detail-label">Ganancia</span><div>${formatMoney(getSaleProfit(record, type))}</div></div>
+                    ${renderPhotoGallery(normalizePhotos(record), 'Fotos / evidencia')}
                     <div class="detail-row"><span class="detail-label">Fecha venta</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                     ${renderAuditRows(record)}
@@ -1566,6 +2037,10 @@
                     <div class="detail-row"><span class="detail-label">Teléfonos</span><div>${(record.client.phones || []).map(phone => `<span class="phone-tag">${escapeHtml(phone)}</span>`).join(' ')}</div></div>
                     <div class="detail-row"><span class="detail-label">Productos</span><div>${record.items.map(item => `${escapeHtml(item.productName)} · ${Number(item.units)} unidad(es) · ${item.inventoryType === 'items' ? 'Items' : 'Rauda'}`).join('<br>')}</div></div>
                     <div class="detail-row"><span class="detail-label">Pago</span><div>${record.payment.fullPrepaid ? `Pago total anticipado: ${formatMoney(record.payment.fullAmount)}` : `Anticipo: ${formatMoney(record.payment.advance)}<br>Paga al recibir: ${formatMoney(record.payment.payOnDelivery)}`}</div></div>
+                    <div class="detail-row"><span class="detail-label">Total vendido</span><div>${formatMoney(paymentTotal(record.payment))}</div></div>
+                    <div class="detail-row"><span class="detail-label">Costo productos</span><div>${formatMoney(getVentaCaexCost(record))}</div></div>
+                    <div class="detail-row"><span class="detail-label">Ganancia</span><div>${formatMoney(getSaleProfit(record, 'caex'))}</div></div>
+                    ${renderPhotoGallery(normalizePhotos(record), 'Fotos / evidencia')}
                     <div class="detail-row"><span class="detail-label">Fecha venta</span><div>${escapeHtml(getRecordDateText(record))}</div></div>
                     <div class="detail-row"><span class="detail-label">Recibido en web</span><div>${escapeHtml(getCaptureText(record))}</div></div>
                     ${renderAuditRows(record)}
@@ -1623,6 +2098,9 @@
         window.addEventListener('resize', setFabState);
         const backdrop = document.getElementById('sidebarBackdrop');
         if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+        setupExtraFormFields();
+        initBusinessSummaryControls();
 
         ensureCancelButton('itemsForm', 'items');
         ensureCancelButton('raudaForm', 'rauda');

@@ -94,8 +94,16 @@
     }
 
     function saveStore(list) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-        if (window.WebOwnerSync) window.WebOwnerSync.queueAutoSync();
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            if (window.WebOwnerSync) window.WebOwnerSync.queueAutoSync();
+        } catch (error) {
+            console.error('No se pudo guardar gasto:', error);
+            const msg = 'No se pudo guardar. Si agregaste foto, probablemente era muy pesada; esta versión comprime imágenes automáticamente.';
+            showToast(msg);
+            alert(msg);
+            throw error;
+        }
     }
 
     function sortRecordsByDate(list) {
@@ -179,12 +187,23 @@
         return Number.parseFloat(value) || 0;
     }
 
+    const MONEY_FORMATTER = new Intl.NumberFormat('es-HN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    function roundMoney(value) {
+        const number = Number(String(value ?? '').replace(/,/g, ''));
+        if (!Number.isFinite(number)) return 0;
+        return Math.round((number + Number.EPSILON) * 100) / 100;
+    }
+
     function formatNumber(value) {
-        return Number(value || 0).toFixed(2);
+        return roundMoney(value).toFixed(2);
     }
 
     function formatMoney(value) {
-        return 'L ' + Number(value || 0).toFixed(2);
+        return 'L ' + MONEY_FORMATTER.format(roundMoney(value));
     }
 
     function formatDate(value) {
@@ -203,7 +222,7 @@
             .replace(/'/g, '&#39;');
     }
 
-    function readFileAsDataUrl(file) {
+    function readRawFileAsDataUrl(file) {
         return new Promise(resolve => {
             if (!file) {
                 resolve('');
@@ -214,6 +233,39 @@
             reader.onerror = () => resolve('');
             reader.readAsDataURL(file);
         });
+    }
+
+    function loadImageFromDataUrl(dataUrl) {
+        return new Promise(resolve => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () => resolve(null);
+            image.src = dataUrl;
+        });
+    }
+
+    async function readFileAsDataUrl(file) {
+        if (!file) return '';
+        const raw = await readRawFileAsDataUrl(file);
+        if (!raw || !(file.type || '').startsWith('image/')) return raw;
+        const image = await loadImageFromDataUrl(raw);
+        if (!image || !image.width || !image.height) return raw;
+        const maxSize = 1280;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d', { alpha: false });
+            ctx.drawImage(image, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.76);
+            return compressed && compressed.length < raw.length ? compressed : raw;
+        } catch (error) {
+            console.warn('No se pudo comprimir la foto del gasto.', error);
+            return raw;
+        }
     }
 
     function showToast(message) {
