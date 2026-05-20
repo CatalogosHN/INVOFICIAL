@@ -2,9 +2,9 @@
   "version": 2,
   "app": "WebOwnerAdmin",
   "schema": "WebOwnerAdmin.v2",
-  "schemaNote": "recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato.",
-  "updatedAtISO": "2026-05-16T22:00:26.818Z",
-  "updatedAtText": "16/5/2026, 4:00:26 p. m.",
+  "schemaNote": "recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato; updatedAt/editCount/editHistory identifican ediciones.",
+  "updatedAtISO": "2026-05-20T20:07:29.488Z",
+  "updatedAtText": "20/5/2026, 2:07:29 p. m.",
   "items": [
     {
       "id": "item_a823c672-e260-48f7-a6e0-9ac00032956a",
