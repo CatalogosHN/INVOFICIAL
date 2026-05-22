@@ -3,8 +3,8 @@
   "app": "WebOwnerAdmin",
   "schema": "WebOwnerAdmin.v2",
   "schemaNote": "recordDate = fecha real del movimiento; receivedAt/createdAt = fecha y hora en que la web recibió el dato; updatedAt/editCount/editHistory identifican ediciones.",
-  "updatedAtISO": "2026-05-20T22:01:00.323Z",
-  "updatedAtText": "20/5/2026, 4:01:00 p. m.",
+  "updatedAtISO": "2026-05-22T22:04:25.211Z",
+  "updatedAtText": "22/5/2026, 4:04:25 p. m.",
   "items": [
     {
       "id": "item_cabe5b8c-b472-4e8d-86ba-f8c759c5c8ed",
@@ -231,6 +231,26 @@
   "salesMoto": [],
   "salesCaex": [],
   "expenses": [
+    {
+      "id": "expense_56529ec3-3940-42f1-9adc-7bd9c2885ca5",
+      "type": "personal",
+      "product": "bolsas frijoles/pan blanco",
+      "description": "5 bolsas de frijoles - 20\n1 bolsa pan blancos - 18\nPagado con 8154 amex",
+      "quantity": 1,
+      "unitPrice": 0,
+      "total": 118,
+      "photo": "",
+      "recordDate": "2026-05-22",
+      "recordDateText": "22/5/2026",
+      "receivedAt": "22/5/2026, 4:04:24 p. m.",
+      "receivedAtISO": "2026-05-22T22:04:24.310Z",
+      "createdAt": "22/5/2026, 4:04:24 p. m.",
+      "createdAtISO": "2026-05-22T22:04:24.310Z",
+      "updatedAt": "",
+      "updatedAtISO": "",
+      "editCount": 0,
+      "editHistory": []
+    },
     {
       "id": "expense_5290a8b3-f399-40d8-b9ec-ba6655509e97",
       "type": "personal",
