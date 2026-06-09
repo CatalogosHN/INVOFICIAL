@@ -176,6 +176,34 @@
         return data;
     }
 
+    async function githubRawFetch(pathSuffix = '') {
+        const token = getToken().trim();
+        if (!token) throw new Error('Primero guarda tu token de GitHub en este dispositivo.');
+
+        const response = await fetch(getContentsUrl() + pathSuffix, {
+            method: 'GET',
+            headers: Object.assign({}, authHeaders(token), {
+                'Accept': 'application/vnd.github.raw'
+            }),
+            cache: 'no-store'
+        });
+
+        const text = await response.text();
+
+        if (!response.ok) {
+            let msg = `GitHub devolvió ${response.status}`;
+            try {
+                const data = JSON.parse(text);
+                msg = data && (data.message || data.error) ? String(data.message || data.error) : msg;
+            } catch (error) {}
+            const error = new Error(msg);
+            error.status = response.status;
+            throw error;
+        }
+
+        return text;
+    }
+
     
     function parseLocalDate(value) {
         if (!value) return null;
@@ -282,12 +310,24 @@ function readLocalArray(key) {
             return null;
         }
 
-        const decoded = base64ToUtf8(remote.content || '');
+        const config = readConfig();
+        const query = `?ref=${encodeURIComponent(config.branch)}`;
+        let decoded = '';
+
+        // GitHub no siempre devuelve el campo content cuando el archivo pasa de 1 MB.
+        // En ese caso se debe pedir el archivo como RAW para poder leer el JSON completo.
+        if (remote.content && remote.encoding === 'base64') {
+            decoded = base64ToUtf8(remote.content || '');
+        } else {
+            decoded = await githubRawFetch(query);
+        }
+
         let payload = null;
         try {
             payload = JSON.parse(decoded);
         } catch (error) {
-            throw new Error('El archivo remoto no contiene JSON válido.');
+            console.error('Respuesta remota inválida:', decoded ? decoded.slice(0, 300) : '(vacía)', error);
+            throw new Error('El archivo remoto no contiene JSON válido o GitHub no devolvió el contenido completo.');
         }
 
         applyRemotePayload(payload);
