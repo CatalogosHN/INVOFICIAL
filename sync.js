@@ -192,6 +192,7 @@
     async function githubRawFetch(pathSuffix = '') {
         const token = getToken().trim();
         if (!token) throw new Error('Primero guarda tu token de GitHub en este dispositivo.');
+        const config = readConfig();
 
         const response = await fetch(getContentsUrl(config.path) + pathSuffix, {
             method: 'GET',
