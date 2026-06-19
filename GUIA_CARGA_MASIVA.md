@@ -6,7 +6,7 @@ Tu `data/adm-store.json` ahora queda más fácil de manipular:
 - `recordDateText`: fecha visible en formato simple.
 - `receivedAt` / `receivedAtISO`: fecha y hora automática en que la web recibió/capturó el dato.
 - `createdAt` / `createdAtISO`: se conserva por compatibilidad con el sistema anterior.
-- Las fotos cargadas masivamente pueden quedar como rutas normales, por ejemplo `assets/productos/items/img1.png`, en vez de base64 gigante.
+- Las fotos cargadas masivamente pueden quedar como rutas normales, por ejemplo `media/inventario/items/img1.png`, en vez de base64 gigante.
 
 ## 1. Preparar productos
 
@@ -69,7 +69,7 @@ Después de ejecutar el script, sube estos cambios:
 
 ```txt
 data/adm-store.json
-assets/productos/
+media/inventario/
 ```
 
 Con eso ya no tienes que meter 100 productos uno por uno desde la web.
@@ -84,3 +84,11 @@ La web ahora tiene botón **Editar** en todas las secciones principales. Cuando 
 - `editHistory`: historial básico de ediciones.
 
 Esto ayuda a identificar si un producto, cliente, venta, envío CAEX o gasto fue corregido después de registrarlo.
+
+
+## Importación desde respuestas rápidas
+
+Este paquete incluye `media/inventario/MANIFIESTO_PUBLICACIONES_FACEBOOK.json`.
+Ahí queda el mapa de las imágenes que venían referenciadas desde `xrspfastimg`.
+Como el ZIP de respuestas rápidas fue enviado sin imágenes físicas, los productos importados usan temporalmente la URL remota de GitHub en `photo` y `photos`.
+Si quieres tener todo dentro de INVOFICIAL, copia las imágenes indicadas en el manifiesto dentro de `media/inventario/items/...`.

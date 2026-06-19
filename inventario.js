@@ -651,7 +651,7 @@
                 <div class="detail-row">
                     <span class="detail-label">${escapeHtml(title)}</span>
                     <div class="evidence-gallery">
-                        ${clean.map((photo, index) => `<a href="${photo}" target="_blank" rel="noopener noreferrer"><img src="${photo}" alt="Foto ${index + 1}"></a>`).join('')}
+                        ${clean.map((photo, index) => `<a href="${photo}" target="_blank" rel="noopener noreferrer"><img src="${photo}" loading="lazy" decoding="async" alt="Foto ${index + 1}"></a>`).join('')}
                     </div>
                 </div>
             `;
@@ -1016,7 +1016,7 @@
                     const low = Number(item.minStock || 0) > 0 && Number(item.stock || 0) <= Number(item.minStock || 0);
                     return `
                         <tr>
-                            <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
+                            <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini" loading="lazy" decoding="async">` : '<span class="pill pill-info">Sin foto</span>'}</td>
                             <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}${photoCountBadge(item)}</td>
                             <td>${Number(item.stock || 0)}</td>
                             <td>${formatMoney(item.cost)}</td>
@@ -1042,7 +1042,7 @@
             } else {
                 raudaBody.innerHTML = rauda.map(item => `
                     <tr>
-                        <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini">` : '<span class="pill pill-info">Sin foto</span>'}</td>
+                        <td>${item.photo ? `<img src="${item.photo}" alt="Foto" class="thumb-mini" loading="lazy" decoding="async">` : '<span class="pill pill-info">Sin foto</span>'}</td>
                         <td><strong>${escapeHtml(item.name)}</strong>${editBadge(item)}${photoCountBadge(item)}</td>
                         <td>${Number(item.stock || 0)}</td>
                         <td>${formatMoney(item.cost)}</td>
@@ -1925,7 +1925,7 @@
                 `Detalle · ${record.name}`,
                 `
                 <div class="detail-list">
-                    ${record.photo ? `<div class="text-center"><img src="${record.photo}" class="thumb-preview" alt="Foto"></div>` : ''}
+                    ${record.photo ? `<div class="text-center"><img src="${record.photo}" class="thumb-preview" loading="lazy" decoding="async" alt="Foto"></div>` : ''}
                     ${renderPhotoGallery(normalizePhotos(record), 'Fotos extra')}
                     <div class="detail-row"><span class="detail-label">Producto</span><div>${escapeHtml(record.name)}</div></div>
                     <div class="detail-row"><span class="detail-label">Stock</span><div>${Number(record.stock || 0)}</div></div>

@@ -166,7 +166,7 @@ def resolve_photo(row_photo: str, image_pool: list[Path], image_folder: Path | N
         if candidate.exists() and candidate.is_file():
             source = candidate
         else:
-            # También puedes escribir directamente una ruta ya publicada, por ejemplo assets/productos/items/img1.png
+            # También puedes escribir directamente una ruta ya publicada, por ejemplo media/inventario/items/img1.png
             return row_photo
     elif image_pool:
         source = image_pool.pop(0)
@@ -221,7 +221,7 @@ def main() -> None:
     parser.add_argument("--entrada", default="tools/productos_masivos.txt", help="Archivo de texto/CSV con productos.")
     parser.add_argument("--imagenes", default="", help="Carpeta con fotos para asignarlas en orden si la línea no trae imagen.")
     parser.add_argument("--json", default="data/adm-store.json", help="Ruta del adm-store.json.")
-    parser.add_argument("--assets", default="", help="Carpeta destino para fotos. Por defecto assets/productos/<seccion>.")
+    parser.add_argument("--assets", default="", help="Carpeta destino para fotos. Por defecto media/inventario/<seccion>.")
     parser.add_argument("--prefijo", default="img", help="Prefijo para fotos renombradas: img1.png, img2.jpg, etc.")
     parser.add_argument("--mover", action="store_true", help="Mover fotos en vez de copiarlas.")
     args = parser.parse_args()
@@ -230,7 +230,7 @@ def main() -> None:
     json_path = (root / args.json).resolve()
     input_path = (root / args.entrada).resolve()
     image_folder = (root / args.imagenes).resolve() if args.imagenes else None
-    assets_dir = (root / args.assets).resolve() if args.assets else (root / "assets" / "productos" / args.seccion).resolve()
+    assets_dir = (root / args.assets).resolve() if args.assets else (root / "media" / "inventario" / args.seccion).resolve()
 
     if not input_path.exists():
         raise FileNotFoundError(f"No existe el archivo de entrada: {input_path}")

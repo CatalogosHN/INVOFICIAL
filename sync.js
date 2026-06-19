@@ -21,6 +21,9 @@
         path: 'data/adm-store.json',
         rememberToken: false
     };
+    const MEDIA_ROOT = 'media/inventario';
+    const MEDIA_SINGLE_FIELDS = ['photo', 'receipt'];
+    const MEDIA_LIST_FIELDS = ['photos', 'attachments'];
 
     let initialized = false;
     let syncTimer = null;
@@ -123,9 +126,14 @@
         };
     }
 
-    function getContentsUrl() {
+    function encodeRepoPath(path) {
+        return String(path || '').replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/');
+    }
+
+    function getContentsUrl(repoPath) {
         const config = readConfig();
-        return `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${config.path}`;
+        const targetPath = repoPath || config.path;
+        return `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${encodeRepoPath(targetPath)}`;
     }
 
     function bytesToBase64(bytes) {
@@ -149,10 +157,10 @@
         return new TextDecoder().decode(bytes);
     }
 
-    async function githubFetch(pathSuffix = '', options = {}) {
+    async function githubFetchPath(repoPath, pathSuffix = '', options = {}) {
         const token = getToken().trim();
         if (!token) throw new Error('Primero guarda tu token de GitHub en este dispositivo.');
-        const response = await fetch(getContentsUrl() + pathSuffix, {
+        const response = await fetch(getContentsUrl(repoPath) + pathSuffix, {
             method: options.method || 'GET',
             headers: Object.assign({}, authHeaders(token), options.headers || {}),
             body: options.body,
@@ -176,11 +184,16 @@
         return data;
     }
 
+    async function githubFetch(pathSuffix = '', options = {}) {
+        const config = readConfig();
+        return githubFetchPath(config.path, pathSuffix, options);
+    }
+
     async function githubRawFetch(pathSuffix = '') {
         const token = getToken().trim();
         if (!token) throw new Error('Primero guarda tu token de GitHub en este dispositivo.');
 
-        const response = await fetch(getContentsUrl() + pathSuffix, {
+        const response = await fetch(getContentsUrl(config.path) + pathSuffix, {
             method: 'GET',
             headers: Object.assign({}, authHeaders(token), {
                 'Accept': 'application/vnd.github.raw'
@@ -286,6 +299,120 @@ function readLocalArray(key) {
         window.dispatchEvent(new CustomEvent('webowner-sync-data-applied'));
     }
 
+
+    function parseDataUrl(value) {
+        const match = /^data:([^;]+);base64,(.+)$/i.exec(String(value || ''));
+        if (!match) return null;
+        return { mime: match[1].toLowerCase(), base64: match[2] };
+    }
+
+    function extensionFromMime(mime) {
+        if (/jpeg|jpg/.test(mime)) return 'jpg';
+        if (/png/.test(mime)) return 'png';
+        if (/webp/.test(mime)) return 'webp';
+        if (/gif/.test(mime)) return 'gif';
+        if (/pdf/.test(mime)) return 'pdf';
+        return 'bin';
+    }
+
+    function slugifyMediaName(value) {
+        const clean = String(value || '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 80);
+        return clean || 'registro';
+    }
+
+    function mediaRecordLabel(record) {
+        if (!record || typeof record !== 'object') return 'registro';
+        return record.name || record.product || record.address || (record.client && record.client.name) || record.id || 'registro';
+    }
+
+    function mediaRecordId(record) {
+        return slugifyMediaName((record && record.id) || String(Date.now()));
+    }
+
+    function buildMediaPath(sectionName, record, fieldName, index, dataUrl) {
+        const parsed = parseDataUrl(dataUrl);
+        const ext = extensionFromMime(parsed ? parsed.mime : 'application/octet-stream');
+        const folder = `${MEDIA_ROOT}/${slugifyMediaName(sectionName)}/${slugifyMediaName(mediaRecordLabel(record))}`;
+        const suffix = index === null || index === undefined ? 'principal' : String(index + 1).padStart(2, '0');
+        return `${folder}/${mediaRecordId(record)}-${slugifyMediaName(fieldName)}-${suffix}.${ext}`;
+    }
+
+    async function fetchRepoPathMeta(repoPath) {
+        const config = readConfig();
+        try {
+            return await githubFetchPath(repoPath, `?ref=${encodeURIComponent(config.branch)}`);
+        } catch (error) {
+            if (error.status === 404) return null;
+            throw error;
+        }
+    }
+
+    async function uploadDataUrlToMedia(repoPath, dataUrl) {
+        const parsed = parseDataUrl(dataUrl);
+        if (!parsed) return dataUrl;
+        const config = readConfig();
+        const remote = await fetchRepoPathMeta(repoPath);
+        const body = {
+            message: buildCommitMessage('INVOFICIAL media'),
+            content: parsed.base64.replace(/\s/g, ''),
+            branch: config.branch
+        };
+        if (remote && remote.sha) body.sha = remote.sha;
+        await githubFetchPath(repoPath, '', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        return repoPath;
+    }
+
+    async function persistRecordMedia(record, sectionName) {
+        if (!record || typeof record !== 'object') return record;
+        const next = Object.assign({}, record);
+
+        for (const fieldName of MEDIA_SINGLE_FIELDS) {
+            if (parseDataUrl(next[fieldName])) {
+                const path = buildMediaPath(sectionName, next, fieldName, null, next[fieldName]);
+                next[fieldName] = await uploadDataUrlToMedia(path, next[fieldName]);
+            }
+        }
+
+        for (const fieldName of MEDIA_LIST_FIELDS) {
+            if (!Array.isArray(next[fieldName])) continue;
+            const list = [];
+            for (let index = 0; index < next[fieldName].length; index += 1) {
+                const value = next[fieldName][index];
+                if (parseDataUrl(value)) {
+                    const path = buildMediaPath(sectionName, next, fieldName, index, value);
+                    list.push(await uploadDataUrlToMedia(path, value));
+                } else if (value) {
+                    list.push(value);
+                }
+            }
+            next[fieldName] = list;
+        }
+
+        return next;
+    }
+
+    async function persistPayloadMedia(payload) {
+        const next = Object.assign({}, payload || {});
+        for (const sectionName of Object.keys(STORAGE_KEYS)) {
+            const rows = Array.isArray(next[sectionName]) ? next[sectionName] : [];
+            const converted = [];
+            for (const record of rows) {
+                converted.push(await persistRecordMedia(record, sectionName));
+            }
+            next[sectionName] = converted;
+        }
+        return next;
+    }
+
     function buildCommitMessage(prefix) {
         return `${prefix} · ${new Date().toISOString()}`;
     }
@@ -349,7 +476,7 @@ function readLocalArray(key) {
         emitStatus('Guardando datos en GitHub...', 'loading');
         try {
             const config = readConfig();
-            const payload = snapshotLocalData();
+            const payload = await persistPayloadMedia(snapshotLocalData());
             const remote = await fetchRemoteFileMeta();
             const body = {
                 message: buildCommitMessage('WebOwnerAdmin sync'),
@@ -369,6 +496,8 @@ function readLocalArray(key) {
                 remoteSha: result && result.content ? result.content.sha : ''
             });
             emitStatus('Datos guardados en GitHub correctamente.', 'success');
+            applyRemotePayload(payload);
+            invokeDataApplied();
             if (!options.silentSuccess) notify('Datos guardados en GitHub.');
             window.dispatchEvent(new CustomEvent('webowner-sync-data-pushed'));
             return result;
